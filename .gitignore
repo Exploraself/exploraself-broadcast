@@ -1,0 +1,6 @@
+.cache/
+*.xml
+node_modules/
+artifacts/
+
+.openai/
