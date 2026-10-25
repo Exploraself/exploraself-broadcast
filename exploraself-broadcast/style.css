@@ -137,3 +137,44 @@
 .mp-go{flex:none;font-size:15px;color:var(--gold-ink)}
 .listview .micropromo{margin-bottom:24px}
 @media(max-width:620px){.mp-tag{display:none}.mp-title{font-size:15px}}
+
+/* ===== The arrival experience ===== */
+#welcome{border:0;border-top:5px solid var(--gold);max-width:690px;padding:0;background:var(--paper);box-shadow:0 40px 90px -30px #2b1b12aa}
+#welcome::backdrop{background:#2b1b12d9;backdrop-filter:blur(5px)}
+#welcome.hardwall::backdrop{background:#2b1b12f2}
+.wc-close{position:absolute;top:10px;right:14px;font-size:27px;width:42px;height:42px;color:var(--muted);z-index:2}
+.wc-body{padding:44px 46px 40px}
+.wc-stage{animation:wc-in .5s ease both}
+@keyframes wc-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.wc-eyebrow{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--gold-ink);margin-bottom:14px}
+.wc-eyebrow .ico{width:16px;height:16px;color:var(--gold)}
+#welcome h2{font-size:34px;line-height:1.1;letter-spacing:-.6px;color:var(--brown);margin-bottom:12px}
+#welcome h2 em{font-style:italic;color:var(--gold-ink)}
+.wc-lede{font-size:14px;line-height:1.7;color:#56483a;max-width:52ch;margin-bottom:22px}
+.wc-chips{display:flex;flex-wrap:wrap;gap:7px;max-height:232px;overflow:auto;padding:2px 2px 6px}
+.wc-chip{border:1px solid #c9bea5;background:#fff;padding:8px 13px;font-size:11.5px;border-radius:30px;min-height:36px}
+.wc-chip:hover{border-color:var(--gold);background:var(--cream)}
+.wc-skip{display:block;margin:20px auto 0;font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:4px}
+
+/* the three stories drifting in, each with what it means for them */
+.wc-anim{min-height:330px}
+.wc-item{opacity:0;border-left:2px solid var(--gold);padding:0 0 0 18px;margin-bottom:22px;animation:wc-drift 1.9s ease both;animation-delay:var(--d)}
+@keyframes wc-drift{0%{opacity:0;transform:translateY(16px)}18%{opacity:1;transform:none}82%{opacity:1;transform:none}100%{opacity:.35;transform:translateY(-4px)}}
+.wc-domain{font-size:9.5px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold-ink)}
+.wc-item h3{font-size:21px;line-height:1.25;margin:5px 0 8px;color:var(--brown)}
+.wc-why{font-size:13px;line-height:1.65;color:#56483a}
+.wc-progress{height:2px;background:var(--line);margin-top:8px;overflow:hidden}
+.wc-progress i{display:block;height:100%;width:100%;background:var(--gold);transform-origin:left;animation:wc-bar var(--total) linear both}
+@keyframes wc-bar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+.wc-form{display:grid;gap:11px;margin-top:4px}
+.wc-form input[type=text],.wc-form input[type=email]{width:100%;padding:14px 15px;border:1px solid #c9bea5;background:#fff;color:var(--navy);font-size:15px}
+.wc-go{background:var(--gold);color:var(--brown);font-size:15px;font-weight:600;padding:15px;border:0}
+.wc-go:hover{filter:brightness(1.06)}
+.wc-consent{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;line-height:1.6;color:#56483a}
+.wc-consent input{margin-top:3px;accent-color:var(--brown);width:16px;height:16px}
+.wc-fine{font-size:10.5px;color:var(--muted);line-height:1.7}
+.wc-fine a{text-decoration:underline}
+.wc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media(max-width:620px){.wc-body{padding:34px 24px 30px}#welcome h2{font-size:26px}.wc-chips{max-height:190px}}
+@media(prefers-reduced-motion:reduce){.wc-stage,.wc-item,.wc-progress i{animation:none;opacity:1;transform:none}}

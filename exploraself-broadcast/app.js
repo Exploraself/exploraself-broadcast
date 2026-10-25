@@ -1,5 +1,6 @@
 import {whyLine,industryNames,topicNames,overrides,articlesFor,teaserFor,coverage} from './content.js';
 import {icon,domainIcon,assessments,products} from './icons.js';
+import {initWelcome} from './welcome.js';
 const $=id=>document.getElementById(id);
 const domains=['Self','People','Work','Business'];
 const topics=['Decision-making','Leadership','Team & culture','AI & technology','Growth & customers','Economy'];
@@ -152,3 +153,4 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(!data||D
 setInterval(refresh,10800000);
 $('editionDate').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 render();refresh();
+initWelcome({getData:()=>data,prefs,persist,render});
