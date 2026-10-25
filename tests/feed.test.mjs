@@ -12,7 +12,7 @@ test('Cloudflare feed endpoint yields linked, dated publisher items in all four 
   assert.equal(response.status,200);
   const body=await response.json();assert.equal(body.articles.length,4);
   assert.deepEqual(new Set(body.articles.map(a=>a.domain)),new Set(['Self','People','Work','Business']));
-  for(const article of body.articles){assert.equal(article.url,'https://example.org/story?ref=rss');assert.equal(article.excerpt,'Useful context for a business decision.');assert.equal(article.publishedAt,'2026-10-25T12:00:00.000Z');}
+  for(const article of body.articles){assert.equal(article.url,'https://example.org/story?ref=rss');assert.equal(article.excerpt,'Useful context for a business decision.');assert.equal(article.publishedAt,'2026-10-25T12:00:00.000Z');assert.deepEqual(article.topics,['Decision-making','Leadership','Team & culture','Growth & customers']);}
   await Promise.all(pending);
  }finally{globalThis.fetch=originalFetch;globalThis.caches=originalCaches;}
 });
