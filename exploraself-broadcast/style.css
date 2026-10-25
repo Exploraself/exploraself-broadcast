@@ -117,3 +117,11 @@
 .newsletter .eyebrow{display:flex;align-items:center;gap:7px}
 .newsletter .eyebrow .ico{width:14px;height:14px;color:var(--gold)}
 .newsletter input[type=text]{padding:12px;border:1px solid #c9bea5;background:var(--paper);color:var(--navy);max-width:180px}
+.ac-name{font-size:9.5px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;color:var(--gold-ink)}
+.assesscard.paid .ac-name{color:var(--gold)}
+.assesscard strong{font-size:17px;line-height:1.25}
+.assessbar.products{background:#fbf6ec;border-top-color:var(--brown)}
+.assessbar.products .assesshead .ico{color:var(--brown)}
+.readerpromo .eyebrow{display:flex;align-items:center;gap:7px}
+.readerpromo .eyebrow .ico{width:15px;height:15px;color:var(--gold)}
+.readerpromo h3{font-size:21px;margin-bottom:8px}
