@@ -30,6 +30,24 @@ const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catc
 let state = Object.assign({ joined: false, seen: false, readSeconds: 0, lastAskAt: 0 }, load());
 let ctx = null, el = null, ticking = false, stage = 'industry', shown = false;
 
+/** The next edition really does replace this one. Say when, truthfully. */
+function untilNext() {
+  const d = ctx.getData();
+  if (!d || !d.fetchedAt) return null;
+  const left = Date.parse(d.fetchedAt) + (d.refreshHours || 3) * 3600000 - Date.now();
+  if (!Number.isFinite(left) || left <= 0) return null;
+  const h = Math.floor(left / 3600000), m = Math.round((left % 3600000) / 60000);
+  return h ? `${h}h ${m}m` : `${m} minutes`;
+}
+
+/** How many of today's stories they have not opened yet. Counted, not invented. */
+function unread() {
+  const d = ctx.getData();
+  if (!d) return 0;
+  const seen = ctx.openedCount ? ctx.openedCount() : 0;
+  return Math.max(0, Math.min(8, (d.articles || []).length) - seen);
+}
+
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /** Three of today's real stories, one per domain where possible. */
@@ -51,9 +69,9 @@ function topicOf(a) {
 
 function industryStage() {
   return `<div class="wc-stage wc-industry">
-    <p class="wc-eyebrow">${icon('compass')}Welcome to Broadcast</p>
-    <h2>The news is the easy part.<br>What it means for <em>you</em> is not.</h2>
-    <p class="wc-lede">Tell us the work you are in. Every story will then say where that kind of news usually lands in your trade.</p>
+    <p class="wc-eyebrow">${icon('compass')}Before you read on</p>
+    <h2>Everyone read the same headlines today.<br>Almost nobody worked out <em>what they meant</em>.</h2>
+    <p class="wc-lede">Name the work you are in. Every story then tells you where that kind of news usually lands in your trade — the part the headline leaves out.</p>
     <div class="wc-chips">${industryNames.map((n) => `<button class="wc-chip" data-wc-industry="${esc(n)}">${esc(n)}</button>`).join('')}</div>
     <button class="wc-skip" data-wc-skip>Skip for now</button>
   </div>`;
@@ -79,12 +97,14 @@ function animationStage() {
 
 function joinStage(hard = false) {
   const ind = ctx.prefs.industry;
+  const left = untilNext(), rest = unread();
+  const lens = ind ? `read through ${esc(ind.toLowerCase())}` : 'read through your own trade';
   return `<div class="wc-stage wc-join">
-    <p class="wc-eyebrow">${icon('compass')}${hard ? 'Keep reading' : 'One last thing'}</p>
-    <h2>${hard ? 'You have read a while. Make it yours.' : 'Tomorrow morning, eight stories.<br>And what each one means for you.'}</h2>
-    <p class="wc-lede">${ind
-      ? `Two from each domain, every day, read through ${esc(ind.toLowerCase())}. Five minutes, and you walk in knowing what moved.`
-      : 'Two stories from each of the four domains, every day. Five minutes, and you walk in knowing what moved.'}</p>
+    <p class="wc-eyebrow">${icon('clock')}${hard ? 'You have read the edition' : 'This edition is not kept'}</p>
+    <h2>${hard
+      ? `Eight minutes in.<br>Make tomorrow's edition <em>yours</em>.`
+      : left ? `This edition is replaced in <em>${esc(left)}</em>.` : `Tomorrow's eight land in the morning.`}</h2>
+    <p class="wc-lede">Broadcast keeps no back issues.${rest ? ` ${rest} ${rest === 1 ? 'story' : 'stories'} in today's edition you have not opened yet.` : ''} Tomorrow, eight more, ${lens} — five minutes, and you walk in knowing what moved.</p>
     <form class="wc-form mcform" data-mc="broadcast">
       <label class="wc-sr" for="wcName">First name</label>
       <input id="wcName" name="FNAME" type="text" autocomplete="given-name" placeholder="First name" required>
