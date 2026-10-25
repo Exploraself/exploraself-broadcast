@@ -10,3 +10,5 @@
 .newsletter{position:relative;overflow:hidden;border:1px solid #6f5a37;border-radius:24px;color:var(--cream);background:radial-gradient(circle at 82% 8%,rgba(201,162,74,.19),transparent 38%),linear-gradient(155deg,var(--warm-brown),var(--brown));box-shadow:0 18px 45px #2b1b1220;padding:36px}
 .newsletter .eyebrow{color:var(--gold)}.newsletter h2{color:var(--cream)}.newsletter p{color:#e4d8c3}.newsletter input[type=email]{background:#241b17;border-color:#836b47;border-radius:12px;color:var(--paper);min-height:49px;font-size:14px}.newsletter input[type=email]::placeholder{color:#a7a098}.newsletter .goldbtn{border-radius:12px;min-height:49px}.newsletter .consent{color:#e4d8c3}.newsletter small{color:#c9baa1}.newsletter .integration-note{color:#c9baa1;border-color:var(--gold)}
 @media(max-width:720px){.newsletter{padding:24px;border-radius:20px}}
+
+.lead.noimage{display:block}
