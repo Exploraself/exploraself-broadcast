@@ -67,3 +67,53 @@
  .industryprompt{padding:22px 20px}
  .industryprompt h2{font-size:25px}
 }
+
+/* ===== Icons, assessment push, graphic touches ===== */
+.ico{width:17px;height:17px;flex:none;vertical-align:-3px}
+.domainlabel .ico{width:15px;height:15px;color:var(--gold)}
+.domainbar .ico{width:15px;height:15px;color:var(--gold);margin-right:6px}
+.domainbar button[aria-pressed=true] .ico{color:var(--gold)}
+.domainbar button{display:inline-flex;align-items:center}
+.meta .ico{width:13px;height:13px;color:var(--gold);margin-right:2px}
+.relatedblock .eyebrow{display:flex;align-items:center;gap:7px}
+.relatedblock .eyebrow .ico{width:14px;height:14px;color:var(--gold)}
+
+.assessbar{border:1px solid var(--line);border-top:3px solid var(--gold);background:#fdfaf3;padding:26px 26px 24px;margin:4px 0 30px}
+.assesshead{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.assesshead .ico{width:32px;height:32px;color:var(--gold)}
+.assesshead h2{font-size:25px;letter-spacing:-.3px;max-width:30ch}
+.assesshead .eyebrow{margin-bottom:5px}
+.assesshead .textbtn{margin-left:auto;white-space:nowrap;color:var(--gold-ink)}
+.assessgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.assesscard{display:flex;flex-direction:column;gap:7px;padding:18px 16px 16px;background:var(--paper);border:1px solid var(--line);min-height:206px;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.assesscard:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 12px 26px #2b1b1218}
+.ac-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ac-top .ico{width:24px;height:24px;color:var(--gold)}
+.ac-price{font-size:9.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border:1px solid var(--line);border-radius:20px;padding:3px 8px;color:var(--gold-ink)}
+.assesscard strong{font-family:var(--serif);font-size:18px;font-weight:500;line-height:1.2;letter-spacing:-.2px}
+.ac-hook{font-size:12px;line-height:1.5;color:#4a3a2a}
+.ac-line{font-size:10.5px;line-height:1.55;color:var(--muted)}
+.assesscard em{margin-top:auto;padding-top:9px;font-style:normal;font-size:10.5px;font-weight:600;color:var(--gold-ink)}
+.assesscard.paid{background:var(--brown);color:var(--cream);border-color:var(--brown)}
+.assesscard.paid .ico,.assesscard.paid em{color:var(--gold)}
+.assesscard.paid .ac-hook{color:#e2d6c2}
+.assesscard.paid .ac-line{color:#bcae99}
+.assesscard.paid .ac-price{color:var(--gold);border-color:#6d5a44}
+.assessbar.compact .assesshead h2{font-size:21px}
+
+.rs-top{display:flex;align-items:center;justify-content:space-between}
+.rs-top .ico{width:26px;height:26px;color:var(--gold)}
+.reportsquare.rs-0 .rs-top .ico{color:var(--gold)}
+
+@media(max-width:1100px){.assessgrid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:860px){
+ .assessgrid{grid-template-columns:1fr 1fr}
+ .assesshead{flex-wrap:wrap;gap:12px}
+ .assesshead .textbtn{margin-left:0}
+ .assesshead h2{font-size:21px}
+ .assessbar{padding:20px 18px}
+}
+@media(max-width:520px){.assessgrid{grid-template-columns:1fr}.assesscard{min-height:0}}
+.newsletter .eyebrow{display:flex;align-items:center;gap:7px}
+.newsletter .eyebrow .ico{width:14px;height:14px;color:var(--gold)}
+.newsletter input[type=text]{padding:12px;border:1px solid #c9bea5;background:var(--paper);color:var(--navy);max-width:180px}
