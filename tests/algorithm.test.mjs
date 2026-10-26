@@ -221,17 +221,27 @@ test('promotion is a banner, never a paragraph', () => {
   assert.match(app, /i % 5 === 4/, 'at most one banner per five stories');
 });
 
+test('nothing stands between the reader and the first headline', () => {
+  // The report bar and the perspectives row are both compact by design; the
+  // old full-screen masthead and 2x2 hero were a wall.
+  const today = app.slice(app.indexOf('function todayReport()'), app.indexOf('// ── Latest / Saved'));
+  const first = today.indexOf('chapter(d, i,');
+  assert.ok(first > 0, 'the chapters render');
+  assert.ok(today.indexOf('bandBanner()') > first, 'the gold band comes after the news has started');
+  assert.doesNotMatch(today, /industryPicker\(\)(?!\s*:\s*'')/, 'no picker is imposed before the news');
+});
+
 test('the Report is the home page and the grid holds', () => {
   assert.match(app, /function todayReport\(/);
-  assert.match(app, /function quadrants\(/);
+  assert.match(app, /function perspectives\(/, 'the four perspectives are visible on arrival');
   assert.ok(app.includes("views = ['Today'"), 'Today is the first view');
   assert.ok(html.includes('reportbar'), 'the sticky bar stays');
   const css = read('../exploraself-broadcast/style.css');
-  assert.match(css, /\.quads\{[^}]*repeat\(2,minmax\(0,1fr\)\)/, 'the four squares are a 2x2 grid');
+  assert.match(css, /\.persp\{[^}]*repeat\(4,minmax\(0,1fr\)\)/, 'the four perspectives sit in one row');
   assert.match(css, /\.ch-grid,\.ch-foot\{[^}]*repeat\(2,minmax\(0,1fr\)\)/, 'full width or exactly half');
 });
 
 test('the triad is on the page', () => {
   assert.ok(html.includes('Inform.') && html.includes('Reform.') && html.includes('Transform.'));
-  assert.match(app, /rm-triad/, 'and in the Report masthead');
+  assert.match(app, /rb-triad/, 'and in the report bar');
 });

@@ -465,3 +465,53 @@
 .src-ok{color:#2f6b45;font-weight:600}
 .src-down{color:var(--muted)}
 .src-declined{color:var(--gold-ink);font-weight:600}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIGHTER ARRIVAL
+   A slim report bar, the four perspectives in one short row, then the news.
+   Nothing stands between the reader and the first headline.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.rptbar{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;flex-wrap:wrap;
+ background:var(--brown);color:var(--cream);border-top:3px solid var(--gold);padding:20px 26px;margin-bottom:16px}
+.rptbar .eyebrow{color:var(--gold);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rptbar .compass{width:14px;height:14px;flex:none}
+.rb-triad{font-family:var(--serif);font-size:30px;font-weight:500;letter-spacing:-.4px;color:var(--cream)}
+.rb-triad b{font-weight:500}
+.rb-triad b:nth-child(2){color:var(--gold)}
+.rb-meta{font-size:11px;color:#c0b19a;letter-spacing:.3px;padding-bottom:5px}
+
+.persp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:26px}
+.pcard{display:flex;flex-direction:column;gap:7px;padding:15px 16px;background:var(--cream);border-top:3px solid var(--brown);transition:background .2s,border-color .2s}
+.pcard:hover{background:var(--brown);color:var(--cream);border-top-color:var(--gold)}
+.p-top{display:flex;align-items:center;justify-content:space-between}
+.p-n{font-family:var(--serif);font-size:19px;color:var(--gold-ink)}
+.pcard:hover .p-n,.pcard:hover .ico{color:var(--gold)}
+.p-top .ico{width:20px;height:20px;color:var(--gold-ink)}
+.p-t{font-family:var(--serif);font-size:19px;font-weight:500;letter-spacing:-.2px;line-height:1.15}
+.p-c{font-size:10px;font-weight:600;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted)}
+.pcard:hover .p-c{color:#c0b19a}
+
+.rb-pill .rp-t{display:inline}
+.rb-pill .rp-i{display:flex;align-items:center}
+
+/* The arrival asks: four perspectives offered, never imposed */
+.wc-domaingrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 6px}
+.wc-domain{display:flex;flex-direction:column;gap:5px;text-align:left;padding:14px 15px;border:1px solid #d9cdb1;background:var(--paper);transition:background .2s,border-color .2s}
+.wc-domain:hover{border-color:var(--brown)}
+.wc-domain.on{background:#fff6e3;border-color:var(--gold)}
+.wd-top{display:flex;align-items:center;justify-content:space-between}
+.wd-top .ico{width:19px;height:19px;color:var(--gold-ink)}
+.wd-top em{font-style:normal;font-size:9.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.wc-domain.on .wd-top em{color:var(--gold-ink)}
+.wc-domain strong{font-family:var(--serif);font-size:18px;font-weight:500;color:var(--brown)}
+.wc-domain small{font-size:11px;line-height:1.55;color:#6a6054}
+.wc-stage .wc-go{margin-top:14px}
+
+@media(max-width:900px){.persp{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){
+ .rptbar{padding:17px 18px;gap:10px}.rb-triad{font-size:23px}.rb-meta{padding-bottom:0}
+ .pcard{padding:13px 14px}.p-t{font-size:17px}
+ .wc-domaingrid{grid-template-columns:1fr}
+ .rb-pill .rp-t{display:inline;font-size:10.5px}
+ .rb-pill{padding:9px 8px}
+}
