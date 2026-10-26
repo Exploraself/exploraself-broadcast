@@ -26,12 +26,12 @@ const SHARDS = [
   [
     ['guardian-psych', 'The Guardian', 'Self', 2, 'https://www.theguardian.com/science/psychology/rss'],
     ['bbc-business', 'BBC News', 'Business', 2, 'https://feeds.bbci.co.uk/news/business/rss.xml'],
-    ['hbr', 'Harvard Business Review', 'Self', 3, 'https://feeds.hbr.org/harvardbusiness'],
+    ['guardian-wellbeing', 'The Guardian', 'Self', 2, 'https://www.theguardian.com/lifeandstyle/health-and-wellbeing/rss'],
     ['sloan', 'MIT Sloan Management Review', 'Work', 3, 'https://sloanreview.mit.edu/feed/'],
     ['economist-biz', 'The Economist', 'Business', 3, 'https://www.economist.com/business/rss.xml'],
     ['conversation-biz', 'The Conversation', 'Work', 3, 'https://theconversation.com/uk/business/articles.atom'],
     ['npr-business', 'NPR', 'Business', 2, 'https://feeds.npr.org/1006/rss.xml'],
-    ['weforum', 'World Economic Forum', 'Business', 2, 'https://www.weforum.org/agenda/feed/'],
+    ['conversation-all', 'The Conversation', 'Self', 3, 'https://theconversation.com/uk/articles.atom'],
     ['aljazeera', 'Al Jazeera', 'Business', 2, 'https://www.aljazeera.com/xml/rss/all.xml'],
   ],
   [
