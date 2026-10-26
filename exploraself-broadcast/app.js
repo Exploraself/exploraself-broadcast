@@ -12,7 +12,7 @@
 
 import { whyLine, industryNames, industryGroups, topicNames, overrides, articlesFor, teaserFor, coverage, moveFor } from './content.js';
 import { icon, domainIcon, assessments, products } from './icons.js';
-import { initWelcome } from './welcome.js';
+import { initWelcome, openIndustry } from './welcome.js';
 
 const $ = (id) => document.getElementById(id);
 const domains = ['Self', 'People', 'Work', 'Business'];
@@ -462,6 +462,7 @@ function article(id) {
     <div class="rd-move" hidden>${move}</div>` : ''}
     <div class="rd-tail"${means ? ' hidden' : ''}>${relatedArticles(a)}${topicTeaser(a)}
     <p class="sourcefine">The question is an ExploraSelf prompt, not a claim made by the publisher. Full reporting remains at the original source.</p></div>`;
+  addFootClose($('reader'), 'Close and keep reading the edition');
   $('reader').showModal();
   $('reader').scrollTop = 0;
   // Let the story have the screen to itself for a beat.
@@ -558,7 +559,15 @@ document.addEventListener('click', (e) => {
     return;
   }
   if (b.dataset.industry) { prefs.industry = b.dataset.industry; prefs.askedIndustry = true; persist(); render(); toast(`Reading through ${prefs.industry}`); return; }
-  if (b.hasAttribute('data-askindustry')) { prefs.industry = ''; prefs.askedIndustry = false; persist(); render(); return; }
+  if (b.hasAttribute('data-askindustry')) {
+    prefs.industry = ''; persist();
+    if ($('reader').open) $('reader').close();   // leave the story we were in
+    render();
+    // Open the chooser itself. Falling back to Preferences if, for any reason,
+    // the arrival dialog is not available.
+    if (!openIndustry()) { navigate('Preferences'); }
+    return;
+  }
   if (b.hasAttribute('data-skipindustry')) { prefs.askedIndustry = true; persist(); render(); return; }
   if (b.hasAttribute('data-backclose')) { awayFrom = null; hideBackBar(); return; }
   if (b.dataset.back) {
@@ -646,6 +655,41 @@ document.addEventListener('submit', (e) => {
 // to this tab we say so, and offer the way back into the report.
 let awayFrom = null;
 
+// ── Dialogs ──────────────────────────────────────────────────────────────────
+// Two things every dialog in this app owes the reader: the page behind it must
+// not move when they drag, and there must be a way out at the bottom as well
+// as the top, so nobody has to scroll back up to escape.
+let scrollLock = 0;
+function lockPage() {
+  if (document.body.classList.contains('locked')) return;
+  scrollLock = window.scrollY;
+  document.body.style.top = `-${scrollLock}px`;
+  document.body.classList.add('locked');
+}
+function unlockPage() {
+  if (!document.body.classList.contains('locked')) return;
+  document.body.classList.remove('locked');
+  document.body.style.top = '';
+  window.scrollTo({ top: scrollLock, behavior: 'instant' });
+}
+function anyDialogOpen() { return !!document.querySelector('dialog[open]'); }
+
+/** Give a dialog a second way out, at the end of its content. */
+function addFootClose(dialog, label = 'Close') {
+  if (!dialog) return;
+  const host = dialog.id === 'reader' ? $('readerBody') : dialog;
+  if (!host || host.querySelector('.footclose')) return;
+  const b = document.createElement('button');
+  b.className = 'footclose close';
+  b.innerHTML = `<span aria-hidden="true">×</span><span>${label}</span>`;
+  host.append(b);
+}
+
+// One observer for every dialog, now and later.
+new MutationObserver(() => { if (anyDialogOpen()) lockPage(); else unlockPage(); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['open'], subtree: true });
+
+
 function returnBar() {
   let bar = $('backbar');
   if (!bar) {
@@ -691,7 +735,7 @@ async function install() {
     const choice = await installPrompt.userChoice;
     installPrompt = null;
     if (choice.outcome === 'accepted') toast('Installation requested');
-  } else $('installDialog').showModal();
+  } else { addFootClose($('installDialog')); $('installDialog').showModal(); }
 }
 window.addEventListener('appinstalled', () => toast('Broadcast installed'));
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

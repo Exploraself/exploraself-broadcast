@@ -135,9 +135,17 @@ function joinStage() {
 function paint() {
   const body = el.querySelector('.wc-body');
   body.innerHTML = stage === 'domains' ? domainsStage() : stage === 'industry' ? industryStage() : stage === 'anim' ? animationStage() : joinStage();
-  // The close button is always there. There is no stage you cannot leave.
+  // The close button is always there. There is no stage you cannot leave, and
+  // there is one at the foot too, so nobody has to scroll back up to escape.
   const close = el.querySelector('.wc-close');
   if (close) close.hidden = false;
+  const stageEl = body.querySelector('.wc-stage');
+  if (stageEl && !stageEl.querySelector('.footclose')) {
+    const b = document.createElement('button');
+    b.className = 'footclose wc-close';
+    b.innerHTML = '<span aria-hidden="true">×</span><span>Close and keep reading</span>';
+    stageEl.append(b);
+  }
   if (stage === 'anim') {
     const ms = (sample().length * 1.9 + 1.6) * 1000;
     clearTimeout(el._t);
@@ -189,9 +197,20 @@ function tick() {
   }, 1000);
 }
 
+/** Open the trade chooser on demand, from anywhere in the app. */
+export function openIndustry() {
+  if (!el) return false;
+  shown = true;
+  stage = 'industry';
+  paint();
+  if (!el.open) el.showModal();
+  return true;
+}
+
 export function initWelcome(context) {
   ctx = context;
-  if (state.joined) return;
+  // The dialog is built even for a reader who has joined, because the trade
+  // chooser is reachable from the story reader at any time.
   el = document.createElement('dialog');
   el.id = 'welcome';
   el.innerHTML = '<button class="wc-close" aria-label="Close">×</button><div class="wc-body"></div>';
@@ -211,7 +230,11 @@ export function initWelcome(context) {
     if (b.hasAttribute('data-wc-next') || b.hasAttribute('data-wc-dismiss')) { record(); return close(); }
     if (b.dataset.wcIndustry) {
       ctx.prefs.industry = b.dataset.wcIndustry;
+      state.askedIndustry = true; save(state);
       ctx.persist(); ctx.render();
+      // Asked for on purpose from inside the app: confirm and get out of the
+      // way. The arrival animation belongs to arrival only.
+      if (state.joined || state.done) { record(); return close(); }
       stage = 'anim'; paint(); return;
     }
     if (b.hasAttribute('data-wc-later')) { record(); return close(); }

@@ -263,6 +263,26 @@ test('the Report is the home page and the grid holds', () => {
   assert.match(css, /\.ch-grid,\.ch-foot\{[^}]*repeat\(2,minmax\(0,1fr\)\)/, 'full width or exactly half');
 });
 
+test('every dialog freezes the page behind it and offers an exit at the foot', () => {
+  const css = read('../exploraself-broadcast/style.css');
+  assert.match(app, /function lockPage\(/, 'the page behind a dialog must not move');
+  assert.match(app, /function unlockPage\(/);
+  assert.match(css, /body\.locked\{[^}]*position:fixed/, 'the lock is a real scroll lock');
+  assert.match(app, /function addFootClose\(/, 'a way out at the end of the content');
+  assert.match(css, /\.footclose\{/);
+  const welcome = read('../exploraself-broadcast/welcome.js');
+  assert.match(welcome, /footclose/, 'the arrival dialog has one too');
+  assert.doesNotMatch(welcome, /close\.hidden = stage === /, 'no stage may hide its own way out');
+});
+
+test('naming your trade takes the reader somewhere', () => {
+  const handler = app.slice(app.indexOf("b.hasAttribute('data-askindustry')"), app.indexOf("b.hasAttribute('data-backclose')"));
+  assert.match(handler, /reader'\)\.close\(\)/, 'it closes the story it was asked from');
+  assert.match(handler, /openIndustry\(\)/, 'and opens the chooser');
+  assert.match(handler, /navigate\('Preferences'\)/, 'with a fallback that still goes somewhere');
+  assert.match(read('../exploraself-broadcast/welcome.js'), /export function openIndustry\(/);
+});
+
 test('the triad is on the page', () => {
   assert.ok(html.includes('Inform.') && html.includes('Reform.') && html.includes('Transform.'));
   assert.match(app, /rb-triad/, 'and in the report bar');
