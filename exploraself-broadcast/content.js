@@ -382,3 +382,67 @@ export function teaserFor(topic) {
   const t = topics[topic];
   return teasers[t ? t.family : 'self'];
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// "Your next move" — tools taken verbatim from Alexandru's field guide
+// "99 Built to Lead". The news gives the case; the tool gives the reform.
+// Each topic family draws from its own set, so the move always fits the story.
+// ──────────────────────────────────────────────────────────────────────────────
+export const tools = {
+  self: [
+    { n: 'AWARE', no: 1, line: 'Your first reaction is information. Your next move is a choice.', ask: 'What changed in you just before the decision became urgent?' },
+    { n: 'TEMPO', no: 3, line: 'Urgency is a feeling. Timing is a decision.', ask: 'If you waited one minute, what would become easier to see?' },
+    { n: 'SIFT', no: 4, line: 'Separate what you saw from what you concluded.', ask: 'What part of your conclusion is evidence, and what part is a guess?' },
+    { n: 'FACT', no: 6, line: 'Ground a charged moment in what can be verified.', ask: 'Which fact would still be true if you felt calmer?' },
+    { n: 'LENS', no: 7, line: 'Values become visible in the response you choose.', ask: 'What value do you want your next response to express?' },
+  ],
+  people: [
+    { n: 'HEAR', no: 41, line: 'Listening begins when your defense waits.', ask: 'What do you think they most need you to understand?' },
+    { n: 'SAY', no: 42, line: 'Clear speech carries care and a specific ask.', ask: 'What is the simplest honest sentence you need to say?' },
+    { n: 'ECHO', no: 43, line: 'Check what the other person actually heard.', ask: 'What might the other person have heard that you did not intend?' },
+    { n: 'CANDOR', no: 45, line: 'Honesty is useful when it can be acted on.', ask: 'What truth can you say in a way the other person can work with?' },
+    { n: 'AGREE', no: 59, line: 'An agreement is useful only when both can name it.', ask: 'What will each person do, by when, and how will you know?' },
+  ],
+  tech: [
+    { n: 'FOCAL', no: 61, line: 'Attention needs a home before tasks multiply.', ask: 'What one outcome would make this period feel well used?' },
+    { n: 'NOW', no: 62, line: 'The next task should serve the next result.', ask: 'What can wait without creating a real cost?' },
+    { n: 'BATCH', no: 68, line: 'Switching work has a cost you can see.', ask: 'Which repeated task would benefit from a single protected block?' },
+    { n: 'FINISH', no: 69, line: "A project finishes when 'done' is observable.", ask: 'What will count as finished, in observable terms?' },
+    { n: 'STAGE', no: 70, line: 'Good work begins with conditions, not willpower.', ask: 'What needs to be ready before you begin?' },
+  ],
+  market: [
+    { n: 'LISTEN', no: 71, line: 'Customer evidence begins with a recent real moment.', ask: 'What did a customer do or say, not just what do you think they want?' },
+    { n: 'NEED', no: 73, line: 'The first request may hide the real need.', ask: 'What are they trying to make easier in their world?' },
+    { n: 'PROBE', no: 74, line: 'A second question can reveal the useful context.', ask: 'What follow-up question would reveal the context?' },
+    { n: 'TRACE', no: 76, line: 'Trace where interest becomes hesitation.', ask: 'Where does the customer’s experience change direction?' },
+    { n: 'OBSERVE', no: 77, line: 'Behavior can challenge a neat explanation.', ask: 'What are people doing that your current explanation does not cover?' },
+  ],
+  money: [
+    { n: 'GATE', no: 21, line: 'A yes spends time and options. Name the threshold.', ask: 'What must be true for you to choose this?' },
+    { n: 'FORK', no: 24, line: 'Compare paths by consequences and reversibility.', ask: 'Which option keeps learning possible?' },
+    { n: 'WAGER', no: 30, line: 'Every choice rests on a bet you can name.', ask: 'What assumption are you betting this choice on?' },
+    { n: 'TALLY', no: 64, line: 'A yes needs a view of the full load.', ask: 'What is the full load behind the next yes?' },
+    { n: 'MARGIN', no: 32, line: 'A plan needs room for real life to happen.', ask: 'How much unclaimed space does your current plan leave?' },
+  ],
+};
+
+/** A stable hash, so one story always shows the same tool. */
+function seedOf(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+
+/** The tool for this story: chosen by the topic's family, fixed by the story's id. */
+export function moveFor(topic, id = '') {
+  const fam = topics[topic] && topics[topic].family;
+  const set = tools[fam] || tools.self;
+  return set[seedOf(String(id) + String(topic)) % set.length];
+}
+
+// The thirty industries in six groups, so the reader meets six choices and not
+// thirty. Comfort is a design decision, not a content decision.
+export const industryGroups = [
+  { label: 'Trades & industry', items: ['Trades & construction', 'Manufacturing', 'Automotive', 'Energy & utilities', 'Transport & logistics', 'Cleaning & facilities', 'Security services'] },
+  { label: 'Health, care & learning', items: ['Health & wellness', 'Beauty & personal care', 'Fitness & sport', 'Childcare & family services', 'Education & training', 'Non-profit & charity'] },
+  { label: 'Advice & expertise', items: ['Coaching & consulting', 'Professional services', 'Legal services', 'Accounting & bookkeeping', 'Finance & insurance', 'Recruitment & HR'] },
+  { label: 'Selling & hosting', items: ['Retail & e-commerce', 'Hospitality & food', 'Wholesale & distribution', 'Travel & tourism', 'Events & entertainment', 'Agriculture & food production'] },
+  { label: 'Tech & digital', items: ['Software & tech', 'IT services & support'] },
+  { label: 'Creative & property', items: ['Creative & media', 'Marketing & advertising agencies', 'Property & real estate'] },
+];
