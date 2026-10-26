@@ -16,7 +16,10 @@ const TTL = 10800; // three hours
 const MAX_XML = 120000; // bound the work per feed
 const MAX_ITEMS = 10; // per feed
 
-// [id, publisher, domain hint (fallback only), authority weight, url]
+// [id, publisher, domain hint (fallback only), authority weight, url, ...alternates]
+// Alternates are tried in order when the first URL refuses or moves. They must
+// be the publisher's own official feed addresses — never a proxy, mirror or
+// scraper, and never a way around a publisher that is deliberately saying no.
 // Weight 3 = management and research desks, 2 = major newsrooms, 1 = trade press.
 //
 // Each shard deliberately contains feeds already proven live on this site, so
@@ -27,6 +30,7 @@ const SHARDS = [
     ['guardian-psych', 'The Guardian', 'Self', 2, 'https://www.theguardian.com/science/psychology/rss'],
     ['bbc-business', 'BBC News', 'Business', 2, 'https://feeds.bbci.co.uk/news/business/rss.xml'],
     ['guardian-wellbeing', 'The Guardian', 'Self', 2, 'https://www.theguardian.com/lifeandstyle/health-and-wellbeing/rss'],
+    ['hbr', 'Harvard Business Review', 'Self', 3, 'https://feeds.hbr.org/harvardbusiness?format=xml', 'https://feeds.hbr.org/harvardbusiness', 'https://hbr.org/feed'],
     ['sloan', 'MIT Sloan Management Review', 'Work', 3, 'https://sloanreview.mit.edu/feed/'],
     ['economist-biz', 'The Economist', 'Business', 3, 'https://www.economist.com/business/rss.xml'],
     ['conversation-biz', 'The Conversation', 'Work', 3, 'https://theconversation.com/uk/business/articles.atom'],
@@ -44,6 +48,7 @@ const SHARDS = [
     ['ars', 'Ars Technica', 'Work', 2, 'https://feeds.arstechnica.com/arstechnica/index'],
     ['verge', 'The Verge', 'Work', 2, 'https://www.theverge.com/rss/index.xml'],
     ['fastco', 'Fast Company', 'Work', 1, 'https://www.fastcompany.com/latest/rss'],
+    ['weforum', 'World Economic Forum', 'Business', 2, 'https://www.weforum.org/stories/rss.xml', 'https://www.weforum.org/agenda/feed/'],
   ],
   [
     ['guardian-smallbiz', 'The Guardian', 'Business', 2, 'https://www.theguardian.com/business/smallbusiness/rss'],
@@ -178,17 +183,34 @@ function parse(xml, source) {
 }
 
 async function readFeed(source) {
-  const status = { id: source[0], name: source[1], domain: source[2], url: source[4] };
-  try {
-    const r = await fetch(source[4], {
-      headers: { 'User-Agent': 'ExploraSelfBroadcast/2.0 (+https://broadcast.exploraself.com) RSS reader', Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml' },
+  const urls = source.slice(4);
+  const status = { id: source[0], name: source[1], domain: source[2], url: urls[0] };
+  for (let i = 0; i < urls.length; i++) {
+    const last = i === urls.length - 1;
+    try {
+      return { status: { ...status, url: urls[i], ok: true }, articles: parse(await fetchFeed(urls[i]), source) };
+    } catch {
+      if (last) return { status: { ...status, ok: false, error: 'Feed temporarily unavailable' }, articles: [] };
+    }
+  }
+  return { status: { ...status, ok: false, error: 'Feed temporarily unavailable' }, articles: [] };
+}
+
+async function fetchFeed(url) {
+  {
+    const r = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; ExploraSelfBroadcast/2.1; +https://broadcast.exploraself.com)',
+        Accept: 'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.8',
+        'Accept-Language': 'en-GB,en;q=0.9',
+      },
     });
     if (!r.ok) throw Error('Feed unavailable');
-    return { status: { ...status, ok: true }, articles: parse(await r.text(), source) };
-  } catch {
-    return { status: { ...status, ok: false, error: 'Feed temporarily unavailable' }, articles: [] };
+    return r.text();
   }
 }
+
+export { SHARDS, FILL, TOPICS, TOPIC_DOMAIN, MAX_ITEMS, TTL };
 
 export async function onRequestGet({ request, waitUntil }) {
   const url = new URL(request.url);
