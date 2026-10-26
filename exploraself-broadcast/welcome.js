@@ -142,8 +142,8 @@ function paint() {
   const stageEl = body.querySelector('.wc-stage');
   if (stageEl && !stageEl.querySelector('.footclose')) {
     const b = document.createElement('button');
-    b.className = 'footclose wc-close';
-    b.innerHTML = '<span aria-hidden="true">×</span><span>Close and keep reading</span>';
+    b.className = 'footclose wc-foot';
+    b.innerHTML = '<span aria-hidden="true">×</span><span>Close</span>';
     stageEl.append(b);
   }
   if (stage === 'anim') {
@@ -220,7 +220,7 @@ export function initWelcome(context) {
   el.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
-    if (b.classList.contains('wc-close')) { record(); return close(); }
+    if (b.classList.contains('wc-close') || b.classList.contains('wc-foot')) { record(); return close(); }
     if (b.dataset.wcDomain) {
       const d = b.dataset.wcDomain, list = ctx.prefs.domains || [];
       ctx.prefs.domains = list.includes(d) ? list.filter((x) => x !== d) : [...list, d];

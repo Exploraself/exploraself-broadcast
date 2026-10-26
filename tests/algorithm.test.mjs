@@ -283,6 +283,33 @@ test('naming your trade takes the reader somewhere', () => {
   assert.match(read('../exploraself-broadcast/welcome.js'), /export function openIndustry\(/);
 });
 
+test('Explore is ExploraSelf\'s own room', () => {
+  const css = read('../exploraself-broadcast/style.css');
+  assert.match(app, /nav-explore/, 'the nav marks it as ours');
+  assert.match(app, /classList\.toggle\('explore-world'/, 'and the room itself changes colour');
+  assert.match(css, /body\.explore-world\{background:/, 'with its own ground');
+  assert.match(css, /\.mainnav button\.nav-explore\{/);
+});
+
+test('a dialog exit is findable, not loud', () => {
+  const css = read('../exploraself-broadcast/style.css');
+  assert.match(css, /\.footclose\{[^}]*width:max-content/, 'the foot exit is sized to its words');
+  assert.doesNotMatch(css, /\.footclose\{[^}]*width:100%/, 'never a full-width slab');
+  // `dialog .close` outranks `.footclose`, so the override must stay explicit.
+  assert.match(css, /dialog \.close\.footclose\{[^}]*position:static/);
+  assert.match(css, /dialog \.close\.footclose\{[^}]*font-size:11\.5px/);
+  const welcome = read('../exploraself-broadcast/welcome.js');
+  assert.match(welcome, /'footclose wc-foot'/, 'and must not wear the big corner-x class');
+});
+
+test('installing is a button, not a page of browser instructions', () => {
+  assert.doesNotMatch(read('../exploraself-broadcast/index.html'), /open the browser menu|Add to Home screen/i,
+    'the dialog no longer ships static instructions');
+  assert.match(app, /installPrompt\.prompt\(\)/, 'where the browser allows it, the button installs');
+  assert.match(app, /data-installretry/, 'and offers a retry where it does not');
+  assert.match(app, /const installed = \(\)/, 'an installed app is not asked to install again');
+});
+
 test('the triad is on the page', () => {
   assert.ok(html.includes('Inform.') && html.includes('Reform.') && html.includes('Transform.'));
   assert.match(app, /rb-triad/, 'and in the report bar');
