@@ -89,8 +89,18 @@ test('a feed that refuses every address degrades instead of breaking the edition
   assert.equal(response.status, 200, 'the edition still ships');
   const hbr = body.sources.find((s) => s.id === 'hbr');
   assert.equal(hbr.ok, false);
-  assert.equal(hbr.error, 'Feed temporarily unavailable');
+  // A 403 is a decision, not an outage, and the panel says so.
+  assert.equal(hbr.declined, true);
+  assert.equal(hbr.error, 'This publisher declines automated requests');
   assert.ok(body.articles.length >= SHARDS[0].length - 1, 'the other publishers still deliver');
+});
+
+test('a feed that is merely down is not reported as declining us', async () => {
+  const { body } = await call('https://broadcast.example/api/news?s=1', async (url) =>
+    url.includes('hbr.org') ? new Response('', { status: 500 }) : new Response(RSS, { status: 200 }));
+  const hbr = body.sources.find((s) => s.id === 'hbr');
+  assert.equal(hbr.declined, false);
+  assert.equal(hbr.error, 'Feed temporarily unavailable');
 });
 
 test('an unreadable shard reports 503 rather than an empty edition', async () => {

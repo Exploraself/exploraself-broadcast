@@ -333,7 +333,7 @@ function preferences() {
     <div class="prefblock"><h2>Your trade</h2>${industryPicker(true)}</div>
     <div class="prefblock"><h2>Your publishers</h2><p>Leave all unticked to read every publisher. ${publishers.length} answered in this edition.</p>
       <div class="checkgrid">${publishers.map((s) => `<label><input type="checkbox" data-pref-source="${esc(s)}" ${prefs.sources.includes(s) ? 'checked' : ''}>${esc(s)}</label>`).join('')}</div>
-      <ul class="sourceslist">${(data?.sources || []).map((s) => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)} · ${esc(s.domain)}</a> — ${s.ok ? 'Connected' : 'Temporarily unavailable'}</li>`).join('')}</ul>
+      <ul class="sourceslist">${(data?.sources || []).map((s) => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)} · ${esc(s.domain)}</a> — <span class="src-${s.ok ? 'ok' : s.declined ? 'declined' : 'down'}">${s.ok ? 'Connected' : esc(s.error || 'Temporarily unavailable')}</span></li>`).join('')}</ul>
       <p class="sourcefine">Original headlines and short publisher excerpts, with a link to the full story at its source. ExploraSelf material is always labelled.</p></div>
     <div class="prefblock"><h2>Make space for reading.</h2>
       <div class="settingsrow"><div><strong>Text size</strong><p>A little more room for each idea.</p></div><select id="textsize" aria-label="Text size"><option value="normal" ${!prefs.large ? 'selected' : ''}>Standard</option><option value="large" ${prefs.large ? 'selected' : ''}>Larger</option></select></div>
