@@ -74,9 +74,29 @@ test('we identify ourselves honestly and do not impersonate a browser', () => {
 // ── Syndication, not republication ───────────────────────────────────────────
 
 test('excerpts stay capped and the link to the publisher survives', () => {
-  assert.match(news, /excerpt\.length > 220/, 'the 220-character excerpt cap must stay');
-  assert.match(app, /Read at \$\{esc\(a\.source\)\}/, 'the reader always links out to the publisher');
+  assert.match(news, /excerpt\.length > 220/, 'the 220-character card excerpt cap must stay');
+  assert.match(app, /(?:Read|Continue) at \$\{esc\(a\.source\)\}/, 'the reader always links out to the publisher');
   assert.match(app, /sourcefine/, 'the note separating our prompt from the publisher must stay');
+});
+
+test('in-app reading uses only what the publisher syndicated', () => {
+  // content:encoded is the publisher's own decision to syndicate. We never
+  // fetch or scrape the article page, and we cap what we carry.
+  assert.match(news, /MAX_BODY\s*=\s*\d+/, 'the syndicated body is capped');
+  assert.match(news, /content:encoded/, 'we read the publisher-provided field');
+  assert.doesNotMatch(news, /fetch\(\s*(?:a|article)\.url|fetch\(link/, 'never fetch the article page itself');
+  assert.match(app, /rd-cont/, 'and say plainly that the full piece continues at the source');
+});
+
+test('nothing from a feed is rendered as markup', () => {
+  // Feeds routinely escape their own HTML; everything is escaped on the way
+  // out, and the decoder resolves entities before stripping tags so a literal
+  // <p> can never survive into the page.
+  assert.match(app, /a\.body\.map\(\(para\) => `<p>\$\{esc\(para\)\}<\/p>`\)/, 'syndicated paragraphs are escaped');
+  assert.doesNotMatch(app, /innerHTML\s*=\s*[^;]*\ba\.(?:excerpt|body)\b(?![^;]*esc\()/, 'no unescaped feed text');
+  assert.match(news, /function entities\(/, 'entities are decoded separately');
+  const d = news.slice(news.indexOf('function decode(s)'), news.indexOf('function decodeBlocks'));
+  assert.ok(d.indexOf('entities(t)') < d.indexOf("replace(/<[^>]+>/g"), 'entities are decoded before tags are stripped');
 });
 
 // ── Every story is told in three parts ───────────────────────────────────────

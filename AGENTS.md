@@ -75,10 +75,22 @@ Therefore:
 
 ## 4. Syndication, not republication
 
-We show a **headline, a short excerpt (220 characters, hard cap), the
-publisher's name, and a link to the original**. That is what RSS is for.
+On a card we show a **headline, a short excerpt (220 characters, hard cap),
+the publisher's name, and a link to the original**.
 
-- Never store, render or summarise the full article body.
+In the reader we additionally show **what the publisher itself placed in
+`content:encoded`**, capped at `MAX_BODY`. A publisher that puts its text in
+its own feed has chosen to syndicate it; many do, and it is why the reader can
+read here instead of being bounced out. Every story still carries its link,
+and the reader says plainly that the full piece continues at the source.
+
+- **Never fetch or scrape the article page.** The feed is the only source.
+- Never raise `MAX_BODY` to the point where we are republishing rather than
+  excerpting, and never carry a body a publisher did not put in the feed.
+- Everything from a feed is escaped before it reaches the page. Feeds
+  routinely escape their own markup, so `decode()` resolves entities **before**
+  stripping tags — otherwise a literal `<p>` survives into the page, which is
+  a bug we have already shipped once.
 - Never remove the link to the source.
 - Never present an ExploraSelf prompt as something the publisher said. The
   reflection and the tool are ours and are labelled as ours.
