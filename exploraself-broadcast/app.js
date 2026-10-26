@@ -37,7 +37,7 @@ const bookmarkIcon = '<svg viewBox="0 0 20 24" aria-hidden="true"><path d="M4 3h
 const compass = '<svg class="compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 2.5 21.5 12 12 21.5 2.5 12 12 2.5Z"/><path d="m12 5.7 2 4.3 4.3 2-4.3 2-2 4.3-2-4.3-4.3-2 4.3-2 2-4.3Z" fill="currentColor" stroke="none"/></svg>';
 
 const PER_DOMAIN = 2; // the daily edition: two stories per domain
-const reportTitles = { Self: 'Lead yourself.', People: 'Lead your people.', Work: 'Question how work happens.', Business: 'Look beyond your business.' };
+const reportTitles = { Self: 'Lead yourself', People: 'Lead people', Work: 'Rethink work', Business: 'Beyond business' };
 const descriptions = { Self: 'Clarity, judgement and the person behind your decisions.', People: 'Teams, trust and the relationships that make work possible.', Work: 'Technology, priorities and better ways of getting things done.', Business: 'Markets, customers and the forces shaping your business.' };
 const questions = { Self: 'What assumption deserves a second look before your next important decision?', People: 'How might this affect the people you lead — and what conversation would help?', Work: 'Where could this change a process, a priority or a decision in your business?', Business: 'What would this mean for your customers, your offer or your next investment of time?' };
 
@@ -205,33 +205,28 @@ function industryPicker(open = false) {
 
 // ── The Leader's Intelligence Report: the home page ──────────────────────────
 
-function masthead() {
-  const e = data ? `Edition retrieved ${dateLabel(data.fetchedAt)}` : 'Your leadership edition';
-  const live = (data?.sources || []).filter((s) => s.ok).length, all = (data?.sources || []).length;
-  return `<section class="rptmast">
-    <div class="rm-body">
-      <p class="eyebrow">${compass}EXPLORASELF · FREE, NO EMAIL</p>
-      <h2>The Leader’s<br>Intelligence Report</h2>
-      <p class="rm-triad"><b>Inform.</b> <b>Reform.</b> <b>Transform.</b></p>
-      <p class="rm-lede">Four perspectives on today. Four questions for your business. Eight stories, read in five minutes, each one told in three parts: what happened, what it means for your trade, and your next move.</p>
-      <p class="rm-fine">${esc(e)}${all ? ` · ${live} of ${all} publishers answered` : ''}</p>
+function reportBar() {
+  const live = (data?.sources || []).filter((s) => s.ok).length;
+  const when = data ? new Date(data.fetchedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
+  return `<section class="rptbar">
+    <div class="rb-left">
+      <p class="eyebrow">${compass}THE LEADER&rsquo;S INTELLIGENCE REPORT · FREE, NO EMAIL</p>
+      <h2 class="rb-triad"><b>Inform.</b> <b>Reform.</b> <b>Transform.</b></h2>
     </div>
-    <div class="rm-side">${domains.map((d, i) => `<a class="rm-jump" href="#chapter-${i}">${domainIcon(d)}<span>${d}</span></a>`).join('')}</div>
+    <p class="rb-meta">8 stories · 5 minutes${when ? ` · updated ${esc(when)}` : ''}${live ? ` · ${live} publishers` : ''}</p>
   </section>`;
 }
 
-function quadrants(e) {
-  return `<div class="quads">${domains.map((d, i) => {
-    const list = e[d] || [];
-    return `<a class="quad q-${i}" href="#chapter-${i}">
-      <span class="q-top"><span class="q-n">0${i + 1}</span>${domainIcon(d)}</span>
-      <span class="q-d">${d}</span>
-      <strong class="q-title">${reportTitles[d]}</strong>
-      <span class="q-rows">${list.length ? list.map((a) => `<span class="q-row">${esc(a.title)}</span>`).join('') : '<span class="q-row q-none">No story cleared the bar today.</span>'}</span>
-      <span class="q-q">${esc(questions[d])}</span>
-      <em class="q-go">Open this perspective →</em>
+/** The four perspectives, visible the moment you arrive, in one short row. */
+function perspectives(e) {
+  return `<nav class="persp" aria-label="The four perspectives">${domains.map((d, i) => {
+    const n = (e[d] || []).length;
+    return `<a class="pcard" href="#chapter-${i}">
+      <span class="p-top"><span class="p-n">0${i + 1}</span>${domainIcon(d)}</span>
+      <strong class="p-t">${reportTitles[d]}</strong>
+      <span class="p-c">${n ? `${n} ${n === 1 ? 'story' : 'stories'}` : 'nothing today'}</span>
     </a>`;
-  }).join('')}</div>`;
+  }).join('')}</nav>`;
 }
 
 function chapter(d, i, list) {
@@ -255,11 +250,10 @@ function todayReport() {
   const e = edition();
   const total = domains.reduce((n, d) => n + (e[d] || []).length, 0);
   if (!total) return empty('Your next edition is on its way.', 'No publisher feed answered in time. You can still set your preferences and explore the free tools.');
-  return `${masthead()}
-    ${industryPicker()}
-    ${quadrants(e)}
-    ${bandBanner()}
-    ${domains.map((d, i) => chapter(d, i, e[d] || [])).join('')}
+  return `${reportBar()}
+    ${prefs.industry ? industryPicker() : ''}
+    ${perspectives(e)}
+    ${domains.map((d, i) => chapter(d, i, e[d] || []) + (i === 1 ? bandBanner() : '')).join('')}
     <div class="rpt-actions"><button class="goldbtn" id="downloadReport">Save today’s report ↓</button><button class="textbtn" data-view="Latest">See everything the feeds carried →</button></div>
     ${newsletter()}`;
 }
@@ -349,7 +343,7 @@ function render() {
   $('mainnav').innerHTML = views.map((v) => `<button data-view="${v}" ${view === v ? 'aria-current="page"' : ''}>${v}${v === 'Saved' && bookmarks.length ? `<span class="count">${bookmarks.length}</span>` : ''}</button>`).join('');
 
   const copy = {
-    Today: ['INFORM. REFORM. TRANSFORM.', 'Today, and what you<br class="mobile-only"> do about it.'],
+    Today: ['EIGHT STORIES · FOUR PERSPECTIVES · FIVE MINUTES', 'Today, and what you<br class="mobile-only"> do about it.'],
     Latest: ['EVERYTHING THE FEEDS CARRIED', 'The full picture.'],
     Saved: ['YOUR READING LIST', 'Ideas worth coming back to.'],
     Explore: ['EXPAND YOUR PERSPECTIVE', 'A better leader starts with curiosity.'],
@@ -365,7 +359,7 @@ function render() {
   if (bar) {
     bar.dataset.mode = view === 'Today' ? 'jumps' : 'cta';
     bar.innerHTML = view === 'Today'
-      ? `<nav class="wrap rb-jumps" aria-label="Jump to a domain">${domains.map((d, i) => `<a class="rb-pill" href="#chapter-${i}" data-chapter="${i}">${domainIcon(d)}<span>${reportTitles[d]}</span></a>`).join('')}</nav>`
+      ? `<nav class="wrap rb-jumps" aria-label="Jump to a domain">${domains.map((d, i) => `<a class="rb-pill" href="#chapter-${i}" data-chapter="${i}"><span class="rp-i">${domainIcon(d)}</span><span class="rp-t">${reportTitles[d]}</span></a>`).join('')}</nav>`
       : `<button class="wrap rb-cta-btn" data-view="Today"><span class="rb-mark" aria-hidden="true">${compass}</span><span class="rb-text"><strong>The Leader’s Intelligence Report</strong><small>Four perspectives on today. Four questions for your business. Free, no email.</small></span><span class="rb-cta">Read it →</span></button>`;
   }
 
