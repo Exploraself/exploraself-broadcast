@@ -462,3 +462,6 @@
 .rd-tail[hidden]{display:none}
 .rd-tail.in{animation:rd-in .5s ease-out both}
 .rd-tail{margin-top:26px}
+.src-ok{color:#2f6b45;font-weight:600}
+.src-down{color:var(--muted)}
+.src-declined{color:var(--gold-ink);font-weight:600}

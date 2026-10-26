@@ -15,7 +15,7 @@
 const TTL = 10800; // three hours
 // Bump whenever the feed list changes: the edge keeps each shard for three
 // hours, so without this a feed fix stays invisible until the TTL expires.
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 const MAX_XML = 120000; // bound the work per feed
 const MAX_ITEMS = 10; // per feed
 
@@ -55,8 +55,8 @@ const SHARDS = [
     ['weforum', 'World Economic Forum', 'Business', 2, 'https://www.weforum.org/stories/rss.xml', 'https://www.weforum.org/agenda/feed/'],
   ],
   [
-    ['guardian-smallbiz', 'The Guardian', 'Business', 2, 'https://www.theguardian.com/business/smallbusiness/rss'],
-    ['greatergood', 'Greater Good · UC Berkeley', 'Self', 2, 'https://greatergood.berkeley.edu/feed'],
+    ['cnbc-tech', 'CNBC', 'Work', 2, 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=19854910'],
+    ['guardian-science', 'The Guardian', 'Self', 2, 'https://www.theguardian.com/science/rss'],
     ['guardian-biz', 'The Guardian', 'Business', 2, 'https://www.theguardian.com/business/rss'],
     ['ft-home', 'Financial Times', 'Business', 3, 'https://www.ft.com/rss/home'],
     ['cnbc-top', 'CNBC', 'Business', 2, 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114'],
@@ -190,15 +190,18 @@ function parse(xml, source) {
 async function readFeed(source) {
   const urls = source.slice(4);
   const status = { id: source[0], name: source[1], domain: source[2], url: urls[0] };
+  let declined = false;
   for (let i = 0; i < urls.length; i++) {
-    const last = i === urls.length - 1;
     try {
       return { status: { ...status, url: urls[i], ok: true }, articles: parse(await fetchFeed(urls[i]), source) };
-    } catch {
-      if (last) return { status: { ...status, ok: false, error: 'Feed temporarily unavailable' }, articles: [] };
+    } catch (e) {
+      if (e && e.declined) declined = true;
     }
   }
-  return { status: { ...status, ok: false, error: 'Feed temporarily unavailable' }, articles: [] };
+  return {
+    status: { ...status, ok: false, declined, error: declined ? 'This publisher declines automated requests' : 'Feed temporarily unavailable' },
+    articles: [],
+  };
 }
 
 async function fetchFeed(url) {
@@ -210,7 +213,12 @@ async function fetchFeed(url) {
         'Accept-Language': 'en-GB,en;q=0.9',
       },
     });
-    if (!r.ok) throw Error('Feed unavailable');
+    if (!r.ok) {
+      // 401/403/451 is a decision, not an outage. We record it and respect it.
+      const e = Error('Feed unavailable');
+      e.declined = r.status === 401 || r.status === 403 || r.status === 451;
+      throw e;
+    }
     return r.text();
   }
 }
