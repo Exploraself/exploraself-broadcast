@@ -178,3 +178,196 @@
 .wc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media(max-width:620px){.wc-body{padding:34px 24px 30px}#welcome h2{font-size:26px}.wc-chips{max-height:190px}}
 @media(prefers-reduced-motion:reduce){.wc-stage,.wc-item,.wc-progress i{animation:none;opacity:1;transform:none}}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INFORM. REFORM. TRANSFORM.
+   One grid, one rhythm: every block is either the full width or exactly half.
+   The Leader's Intelligence Report is the home page; its four squares are the
+   grid. Promotion is artwork and a button, never another paragraph.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.topline b{font-weight:600;letter-spacing:1.6px}
+
+/* ── The sticky bar ─────────────────────────────────────────────────────── */
+.reportbar{position:sticky;top:0;z-index:40;background:var(--brown);color:var(--cream);border-bottom:1px solid var(--gold)}
+.rb-jumps{display:grid;grid-template-columns:repeat(4,1fr)}
+.rb-jumps a{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 6px;font-size:11px;font-weight:600;letter-spacing:.3px;color:var(--cream);border-left:1px solid #5d4a39;text-align:center}
+.rb-jumps a:first-child{border-left:0}
+.rb-jumps a:hover{color:var(--gold);background:#241812}
+.rb-jumps .ico{width:18px;height:18px;color:var(--gold);flex:none}
+.rb-cta-btn{display:flex;align-items:center;gap:18px;width:100%;padding-block:12px;color:var(--cream);text-align:left}
+.rb-cta-btn:hover{color:var(--gold)}
+.rb-mark .compass{width:30px;height:30px;color:var(--gold)}
+.rb-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.rb-text strong{font-family:var(--serif);font-size:18px;font-weight:500}
+.rb-text small{font-size:10.5px;color:#c9baa1}
+.rb-cta{margin-left:auto;background:var(--gold);color:var(--brown);font-size:11px;font-weight:600;padding:9px 15px;white-space:nowrap}
+
+/* ── The Report masthead ───────────────────────────────────────────────── */
+.rptmast{background:radial-gradient(circle at 85% 6%,rgba(201,162,74,.2),transparent 40%),linear-gradient(155deg,var(--warm-brown),var(--brown));color:var(--cream);border-top:4px solid var(--gold);padding:38px;margin-bottom:26px}
+.rptmast .eyebrow{color:var(--gold);display:flex;align-items:center;gap:8px}
+.rptmast .compass{width:15px;height:15px;flex:none}
+.rm-body h2{font-size:48px;line-height:1.04;letter-spacing:-1.2px;color:var(--cream)}
+.rm-triad{font-family:var(--serif);font-size:23px;color:var(--gold);margin-top:18px;letter-spacing:.2px}
+.rm-triad b{font-weight:500}
+.rm-lede{font-size:13px;line-height:1.85;color:#e4d8c3;max-width:640px;margin-top:14px}
+.rm-fine{font-size:10.5px;letter-spacing:.4px;color:#c0b19a;margin-top:18px}
+.rm-side{display:grid;grid-template-columns:repeat(4,1fr);margin-top:28px;border-top:1px solid #6f5a37}
+.rm-jump{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 6px;font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--cream);border-left:1px solid #6f5a37}
+.rm-jump:first-child{border-left:0}
+.rm-jump:hover{color:var(--gold)}
+.rm-jump .ico{width:19px;height:19px;color:var(--gold);flex:none}
+
+/* ── The four squares ──────────────────────────────────────────────────── */
+.quads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-bottom:26px}
+.quad{display:flex;flex-direction:column;gap:11px;min-height:286px;padding:26px;background:var(--warm-brown);color:var(--cream);border-top:4px solid var(--gold)}
+.quad:hover{background:#30210f;color:var(--cream)}
+.q-top{display:flex;align-items:center;justify-content:space-between}
+.q-n{font-family:var(--serif);font-size:31px;line-height:1;color:var(--gold)}
+.q-top .ico{width:27px;height:27px;color:var(--gold)}
+.q-d{font-size:10px;font-weight:600;letter-spacing:2.2px;text-transform:uppercase;color:var(--gold)}
+.q-title{font-family:var(--serif);font-size:28px;font-weight:500;letter-spacing:-.4px;line-height:1.15}
+.q-rows{display:grid;gap:9px;margin-top:5px}
+.q-row{font-size:12px;line-height:1.6;color:#e7dcc7;border-left:2px solid #7a6549;padding-left:11px}
+.q-none{color:#b4a58f;font-style:italic;border-left-color:#5d4a39}
+.q-q{font-size:11.5px;line-height:1.75;color:#c0b19a;margin-top:auto;padding-top:10px}
+.q-go{font-size:11px;font-weight:600;font-style:normal;color:var(--gold)}
+
+/* ── Promotion as banners, three sizes, one slot each ──────────────────── */
+.bn{display:grid;gap:15px;min-width:0}
+.bn-art{display:grid;place-items:center;background:var(--gold);color:var(--brown);width:58px;height:58px;flex:none}
+.bn-art .ico{width:29px;height:29px;stroke-width:1.4}
+.bn-body{display:flex;flex-direction:column;gap:7px;min-width:0}
+.bn-tag{font-size:9.5px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold-ink)}
+.bn-title{font-family:var(--serif);font-size:22px;font-weight:500;line-height:1.2;letter-spacing:-.3px;color:var(--brown)}
+.bn-sub{font-size:11.5px;color:#5c5245}
+.bn-go{display:inline-flex;align-items:center;gap:9px;justify-content:space-between;background:var(--brown);color:var(--cream);font-size:11px;font-weight:600;padding:11px 15px}
+.bn-go em{font-style:normal}
+.bn:hover .bn-go{background:var(--gold);color:var(--brown)}
+
+.bn-tile{grid-template-rows:auto 1fr auto;padding:24px;background:var(--cream);border-top:3px solid var(--brown)}
+.bn-strip{grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:15px 17px;background:var(--cream);border-left:3px solid var(--gold)}
+.bn-strip .bn-art{width:40px;height:40px}
+.bn-strip .bn-art .ico{width:21px;height:21px}
+.bn-strip .bn-title{font-size:17px}
+.bn-strip .bn-go{padding:9px 13px;font-size:10.5px}
+
+.bn-band{grid-template-columns:auto 1fr auto;align-items:center;gap:28px;padding:30px 34px;background:var(--gold);border:0;margin-bottom:26px}
+.bn-band .bn-art{background:var(--brown);color:var(--gold);width:74px;height:74px}
+.bn-band .bn-art .ico{width:38px;height:38px}
+.bn-band .bn-tag{color:#4a3717}
+.bn-band .bn-title{font-size:31px;letter-spacing:-.6px}
+.bn-band .bn-sub{color:#50401f}
+.bn-band .bn-go{background:var(--brown);color:var(--cream);padding:14px 20px;font-size:12px}
+.bn-band:hover .bn-go{background:var(--paper);color:var(--brown)}
+
+/* ── Chapters: two stories, one question, one banner ───────────────────── */
+.chapter{margin-top:42px;scroll-margin-top:62px}
+.ch-head{display:flex;align-items:center;gap:20px;border-top:2px solid var(--brown);padding-top:16px;margin-bottom:22px}
+.ch-n{font-family:var(--serif);font-size:44px;line-height:1;color:var(--gold);flex:none}
+.ch-head .eyebrow{margin-bottom:5px}
+.ch-head h3{font-size:28px;letter-spacing:-.4px}
+.ch-head>.ico{width:34px;height:34px;color:var(--gold);margin-left:auto;flex:none}
+.ch-grid,.ch-foot{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.ch-foot{margin-top:24px}
+.ch-q{background:var(--cream);padding:24px;border-top:3px solid var(--brown)}
+.ch-q p:not(.partlabel){font-family:var(--serif);font-size:19px;line-height:1.45;color:var(--brown)}
+.ch-q ol{padding-left:19px;font-size:12px;line-height:2;margin:14px 0 0;color:#4e5a62}
+.ch-none{background:var(--cream);padding:22px;font-size:12.5px;color:var(--muted);line-height:1.8}
+.rpt-actions{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin:36px 0 8px}
+
+/* ── A story in three parts: what happened, what it means, your next move ─ */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.story.st-card,.grid .story,.ch-grid .story{display:flex;flex-direction:column;background:#FFFDF7;border:1px solid var(--line);border-left:1px solid var(--line);padding:24px;margin:0;overflow:hidden}
+.st-card .st-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.st-card .domainlabel{margin:0}
+.st-card .meta{margin:0;font-size:9.5px}
+.st-card h3{font-size:24px;letter-spacing:-.3px;margin-top:13px}
+.st-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid var(--line);margin-top:auto;padding-top:14px}
+.st-foot .textbtn{font-size:11px}
+
+.part{border-top:1px solid var(--line);padding-top:13px;margin-top:15px}
+.partlabel{display:flex;align-items:center;gap:8px;font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-ink);margin-bottom:8px}
+.partlabel .ico{width:14px;height:14px;flex:none}
+.part>p:not(.partlabel){font-size:12.5px;line-height:1.78;color:#4e5a62}
+.part.means{background:var(--cream);margin-inline:-24px;padding:15px 24px 16px;border-top:1px solid var(--gold)}
+.part.means .textbtn{margin-top:10px;font-size:11px;display:inline-block}
+.part.move{border-top:2px solid var(--brown)}
+.movetool{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap}
+.movename{font-family:var(--serif);font-size:21px;font-weight:500;letter-spacing:.6px;color:var(--brown)}
+.moveno{font-size:9.5px;font-weight:600;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted)}
+.moveline{font-size:12px;line-height:1.7;color:#5c6670;margin-top:5px}
+.part.move .moveask{font-family:var(--serif);font-size:16.5px;line-height:1.5;color:var(--brown);margin-top:11px;border-left:2px solid var(--gold);padding-left:14px}
+
+/* ── The industry choice: six doors, not thirty ────────────────────────── */
+.indpick{background:var(--cream);border-top:3px solid var(--gold);padding:28px;margin-bottom:26px}
+.indpick h2{font-size:30px;color:var(--brown)}
+.indlede{font-size:12.5px;line-height:1.8;color:#5c6670;max-width:640px;margin-top:9px}
+.indgroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:11px;margin:20px 0 18px}
+.indgroup{border:1px solid #d9cdb1;background:var(--paper)}
+.indgroup summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px;font-size:12px;font-weight:600;cursor:pointer;list-style:none}
+.indgroup summary::-webkit-details-marker{display:none}
+.indgroup summary span{font-size:9.5px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:1px 8px}
+.indgroup[open] summary{color:var(--gold-ink);border-bottom:1px solid #e6dcc5}
+.indchips{display:flex;flex-wrap:wrap;gap:7px;padding:14px 15px}
+.indchip{border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-size:11px;background:var(--paper);min-height:34px}
+.indchip:hover,.indchip.on{background:var(--brown);color:var(--cream);border-color:var(--brown)}
+.indline{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--cream);border-left:3px solid var(--gold);padding:13px 17px;font-size:12px;margin-bottom:26px}
+.indline>span{display:flex;align-items:center;gap:10px;min-width:0}
+.indline b{color:var(--brown)}
+.indline .ico{width:16px;height:16px;color:var(--gold-ink);flex:none}
+
+/* ── Explore ───────────────────────────────────────────────────────────── */
+.explore .grid{margin-bottom:30px}
+.domaincard{background:var(--cream);border-top:3px solid var(--gold);padding:24px}
+.domaincard .number{font-size:31px;margin-bottom:10px}
+.domaincard>.ico{width:28px;height:28px;color:var(--gold-ink)}
+.domaincard h2{font-size:26px;margin:8px 0 0}
+
+/* ── Reader ────────────────────────────────────────────────────────────── */
+#readerBody .part.means{margin-inline:0;padding:17px 20px}
+#readerBody .relatedblock{margin-top:26px}
+.relatedrow{display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid var(--line);padding:13px 0;font-size:12px}
+.relatedrow small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.relatedrow em{font-style:normal;font-size:11px;font-weight:600;white-space:nowrap}
+#readerBody .bn-strip{margin-top:20px}
+
+@media(max-width:1050px){
+ .rptmast{padding:30px}.rm-body h2{font-size:38px}.rm-triad{font-size:20px}
+ .bn-band{gap:20px;padding:24px}.bn-band .bn-title{font-size:25px}
+ .quad{min-height:258px;padding:22px}.q-title{font-size:25px}
+}
+@media(max-width:820px){
+ .quads,.ch-grid,.ch-foot,.grid{grid-template-columns:1fr;gap:18px}
+ .rm-side,.rb-jumps{grid-template-columns:repeat(2,1fr)}
+ .rm-jump:nth-child(3),.rb-jumps a:nth-child(3){border-left:0}
+ .rm-jump,.rb-jumps a{border-top:1px solid #6f5a37;justify-content:flex-start;padding-inline:4px}
+ .rm-side{border-top:0;margin-top:20px}
+}
+@media(max-width:720px){
+ .rptmast{padding:24px}.rm-body h2{font-size:32px;letter-spacing:-.8px}.rm-triad{font-size:18px;margin-top:14px}.rm-lede{font-size:12.5px}
+ .bn-band{grid-template-columns:auto 1fr;gap:16px;padding:22px}
+ .bn-band .bn-go{grid-column:1/-1;justify-content:center}
+ .bn-band .bn-art{width:54px;height:54px}.bn-band .bn-art .ico{width:28px;height:28px}
+ .bn-band .bn-title{font-size:22px}
+ .bn-tile{padding:20px}.bn-title{font-size:20px}
+ .story.st-card,.grid .story,.ch-grid .story{padding:20px}
+ .part.means{margin-inline:-20px;padding:14px 20px}
+ .st-card h3{font-size:22px}
+ .ch-head{gap:14px}.ch-n{font-size:33px}.ch-head h3{font-size:24px}.ch-head>.ico{width:26px;height:26px}
+ .chapter{margin-top:32px}
+ .indpick{padding:22px}.indpick h2{font-size:25px}.indgroups{grid-template-columns:1fr}
+ .indline{flex-wrap:wrap;gap:8px}
+ .rb-text small{display:none}.rb-cta{padding:8px 12px;font-size:10px}
+ .rb-jumps a span{font-size:10px}
+ .quad{min-height:0}
+}
+
+/* The filter row belongs to Latest and Saved only; `display:flex` otherwise
+   defeats the hidden attribute. And a closed group must not stretch to match
+   an open neighbour — that ragged row is the asymmetry we set out to remove. */
+.domainbar[hidden]{display:none}
+.indgroup{align-self:start}
+/* The older .reportbar .wrap rule is flex; the jump row needs the grid. */
+.reportbar .rb-jumps{display:grid}

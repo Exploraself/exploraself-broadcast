@@ -1,56 +1,225 @@
-const TTL=10800;
-const sources=[
- ['guardian-self','The Guardian','Self','https://www.theguardian.com/science/psychology/rss'],
- ['guardian-people','The Guardian','People','https://www.theguardian.com/money/work-and-careers/rss'],
- ['bbc-tech','BBC News','Work','https://feeds.bbci.co.uk/news/technology/rss.xml'],
- ['bbc-business','BBC News','Business','https://feeds.bbci.co.uk/news/business/rss.xml'],
- ['guardian-smallbiz','The Guardian','Business','https://www.theguardian.com/business/smallbusiness/rss']
+// ExploraSelf Broadcast — the news endpoint.
+//
+// Why this is sharded: the Workers free plan allows 10ms of CPU per request
+// and 50 external subrequests. Parsing twenty-seven feeds in one invocation
+// would exceed the CPU budget and the whole edition would fail. So the feeds
+// are split into three shards, each cached separately at the edge for three
+// hours, and the browser fetches all three in parallel and merges them.
+//
+// Scoring and selection are deliberately NOT done here. Choosing the eight
+// stories of the day is the expensive part, and the browser does it for free.
+//
+// We syndicate what RSS is for: headline, short summary, source name, link
+// out. We never reproduce an article body.
+
+const TTL = 10800; // three hours
+const MAX_XML = 120000; // bound the work per feed
+const MAX_ITEMS = 10; // per feed
+
+// [id, publisher, domain hint (fallback only), authority weight, url]
+// Weight 3 = management and research desks, 2 = major newsrooms, 1 = trade press.
+//
+// Each shard deliberately contains feeds already proven live on this site, so
+// no shard can come back completely empty if a newer URL has moved. The list is
+// over-provisioned on purpose: twenty-seven feeds to fill eight slots a day.
+const SHARDS = [
+  [
+    ['guardian-psych', 'The Guardian', 'Self', 2, 'https://www.theguardian.com/science/psychology/rss'],
+    ['bbc-business', 'BBC News', 'Business', 2, 'https://feeds.bbci.co.uk/news/business/rss.xml'],
+    ['hbr', 'Harvard Business Review', 'Self', 3, 'https://feeds.hbr.org/harvardbusiness'],
+    ['sloan', 'MIT Sloan Management Review', 'Work', 3, 'https://sloanreview.mit.edu/feed/'],
+    ['economist-biz', 'The Economist', 'Business', 3, 'https://www.economist.com/business/rss.xml'],
+    ['conversation-biz', 'The Conversation', 'Work', 3, 'https://theconversation.com/uk/business/articles.atom'],
+    ['npr-business', 'NPR', 'Business', 2, 'https://feeds.npr.org/1006/rss.xml'],
+    ['weforum', 'World Economic Forum', 'Business', 2, 'https://www.weforum.org/agenda/feed/'],
+    ['aljazeera', 'Al Jazeera', 'Business', 2, 'https://www.aljazeera.com/xml/rss/all.xml'],
+  ],
+  [
+    ['bbc-tech', 'BBC News', 'Work', 2, 'https://feeds.bbci.co.uk/news/technology/rss.xml'],
+    ['guardian-work', 'The Guardian', 'People', 2, 'https://www.theguardian.com/money/work-and-careers/rss'],
+    ['guardian-tech', 'The Guardian', 'Work', 2, 'https://www.theguardian.com/uk/technology/rss'],
+    ['mit-tech', 'MIT Technology Review', 'Work', 3, 'https://www.technologyreview.com/feed/'],
+    ['wharton', 'Knowledge at Wharton', 'Business', 3, 'https://knowledge.wharton.upenn.edu/feed/'],
+    ['wired-biz', 'WIRED', 'Work', 2, 'https://www.wired.com/feed/category/business/latest/rss'],
+    ['ars', 'Ars Technica', 'Work', 2, 'https://feeds.arstechnica.com/arstechnica/index'],
+    ['verge', 'The Verge', 'Work', 2, 'https://www.theverge.com/rss/index.xml'],
+    ['fastco', 'Fast Company', 'Work', 1, 'https://www.fastcompany.com/latest/rss'],
+  ],
+  [
+    ['guardian-smallbiz', 'The Guardian', 'Business', 2, 'https://www.theguardian.com/business/smallbusiness/rss'],
+    ['guardian-biz', 'The Guardian', 'Business', 2, 'https://www.theguardian.com/business/rss'],
+    ['ft-home', 'Financial Times', 'Business', 3, 'https://www.ft.com/rss/home'],
+    ['cnbc-top', 'CNBC', 'Business', 2, 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114'],
+    ['marketwatch', 'MarketWatch', 'Business', 2, 'https://feeds.content.dowjones.io/public/rss/mw_topstories'],
+    ['techcrunch', 'TechCrunch', 'Business', 1, 'https://techcrunch.com/feed/'],
+    ['entrepreneur', 'Entrepreneur', 'Business', 1, 'https://www.entrepreneur.com/latest.rss'],
+    ['inc', 'Inc.', 'Business', 1, 'https://www.inc.com/rss'],
+    ['sifted', 'Sifted', 'Business', 1, 'https://sifted.eu/feed'],
+    ['eustartups', 'EU-Startups', 'Business', 1, 'https://www.eu-startups.com/feed/'],
+  ],
 ];
-const TOPICS={
- 'Decision-making':[/(?:^|\W)decision\w*\b/i,/(?:^|\W)judg(?:e)?ment\w*\b/i,/(?:^|\W)think\w*\b/i,/(?:^|\W)brain\w*\b/i,/(?:^|\W)psycholog\w*\b/i,/(?:^|\W)creativ\w*\b/i,/(?:^|\W)bias(?:ed|es)?\b/i],
- 'Leadership':[/(?:^|\W)leader\w*\b/i,/(?:^|\W)manager\w*\b/i,/(?:^|\W)boss\w*\b/i,/(?:^|\W)executive\w*\b/i,/(?:^|\W)chief exec\w*\b/i,/(?:^|\W)founder\w*\b/i,/(?:^|\W)board\b/i],
- 'Burnout & wellbeing':[/(?:^|\W)burnout\b/i,/(?:^|\W)stress\w*\b/i,/(?:^|\W)wellbeing\b/i,/(?:^|\W)mental health\b/i,/(?:^|\W)sleep\w*\b/i,/(?:^|\W)exhaust\w*\b/i],
- 'Reputation & trust':[/(?:^|\W)reputation\w*\b/i,/(?:^|\W)trust\w*\b/i,/(?:^|\W)scandal\w*\b/i,/(?:^|\W)apolog\w*\b/i,/(?:^|\W)backlash\b/i,/(?:^|\W)boycott\w*\b/i],
- 'Team & culture':[/(?:^|\W)team\w*\b/i,/(?:^|\W)workplace\w*\b/i,/(?:^|\W)staff\b/i,/(?:^|\W)employee\w*\b/i,/(?:^|\W)culture\b/i,/(?:^|\W)morale\b/i,/(?:^|\W)union\w*\b/i],
- 'Hiring & talent':[/(?:^|\W)hir(?:e|ing|ed)\b/i,/(?:^|\W)recruit\w*\b/i,/(?:^|\W)vacanc\w*\b/i,/(?:^|\W)talent\b/i,/(?:^|\W)shortage\w*\b/i,/(?:^|\W)apprentice\w*\b/i],
- 'Jobs & careers':[/(?:^|\W)job\w*\b/i,/(?:^|\W)career\w*\b/i,/(?:^|\W)redundan\w*\b/i,/(?:^|\W)layoff\w*\b/i,/(?:^|\W)unemploy\w*\b/i,/(?:^|\W)wage\w*\b/i,/(?:^|\W)salar\w*\b/i],
- 'Remote & hybrid work':[/(?:^|\W)remote work\w*\b/i,/(?:^|\W)hybrid\b/i,/(?:^|\W)work from home\b/i,/(?:^|\W)return to (?:the )?office\b/i,/(?:^|\W)four-day week\b/i,/(?:^|\W)commut\w*\b/i],
- 'Skills & training':[/(?:^|\W)skill\w*\b/i,/(?:^|\W)training\b/i,/(?:^|\W)reskill\w*\b/i,/(?:^|\W)upskill\w*\b/i,/(?:^|\W)qualification\w*\b/i,/(?:^|\W)graduate\w*\b/i],
- 'AI & technology':[/(?:^|\W)AI(?:\W|$)/i,/(?:^|\W)artificial intelligence\b/i,/(?:^|\W)chatbot\w*\b/i,/(?:^|\W)machine learning\b/i,/(?:^|\W)technolog\w*\b/i,/(?:^|\W)robot\w*\b/i,/(?:^|\W)chip\w*\b/i],
- 'Automation & productivity':[/(?:^|\W)automat\w*\b/i,/(?:^|\W)productivit\w*\b/i,/(?:^|\W)efficien\w*\b/i,/(?:^|\W)workflow\w*\b/i],
- 'Software & tools':[/(?:^|\W)software\b/i,/(?:^|\W)app\b/i,/(?:^|\W)platform\w*\b/i,/(?:^|\W)cloud\b/i,/(?:^|\W)digital\b/i,/(?:^|\W)subscription\w*\b/i],
- 'Cybersecurity':[/(?:^|\W)cyber\w*\b/i,/(?:^|\W)hack\w*\b/i,/(?:^|\W)breach\w*\b/i,/(?:^|\W)ransomware\b/i,/(?:^|\W)phishing\b/i,/(?:^|\W)data (?:leak|protection|privacy)\b/i,/(?:^|\W)fraud\w*\b/i],
- 'Growth & customers':[/(?:^|\W)customer\w*\b/i,/(?:^|\W)consumer\w*\b/i,/(?:^|\W)retail\w*\b/i,/(?:^|\W)growth\b/i,/(?:^|\W)demand\b/i,/(?:^|\W)shopper\w*\b/i],
- 'Marketing & advertising':[/(?:^|\W)marketing\b/i,/(?:^|\W)advertis\w*\b/i,/(?:^|\W)brand\w*\b/i,/(?:^|\W)campaign\w*\b/i,/(?:^|\W)social media\b/i,/(?:^|\W)influencer\w*\b/i],
- 'Sales & pricing':[/(?:^|\W)pric(?:e|es|ing)\b/i,/(?:^|\W)sales\b/i,/(?:^|\W)discount\w*\b/i,/(?:^|\W)revenue\w*\b/i,/(?:^|\W)margin\w*\b/i],
- 'Consumer confidence':[/(?:^|\W)confidence\b/i,/(?:^|\W)sentiment\b/i,/(?:^|\W)spending\b/i,/(?:^|\W)household\w*\b/i,/(?:^|\W)cost of living\b/i],
- 'Competition':[/(?:^|\W)competit\w*\b/i,/(?:^|\W)rival\w*\b/i,/(?:^|\W)market share\b/i,/(?:^|\W)monopol\w*\b/i,/(?:^|\W)takeover\w*\b/i,/(?:^|\W)merger\w*\b/i],
- 'Innovation & R&D':[/(?:^|\W)innovat\w*\b/i,/(?:^|\W)research and development\b/i,/(?:^|\W)patent\w*\b/i,/(?:^|\W)breakthrough\w*\b/i,/(?:^|\W)launch\w*\b/i],
- 'Economy':[/(?:^|\W)econom\w*\b/i,/(?:^|\W)inflation\b/i,/(?:^|\W)recession\w*\b/i,/(?:^|\W)GDP\b/i,/(?:^|\W)growth forecast\w*\b/i,/(?:^|\W)market\w*\b/i],
- 'Interest rates':[/(?:^|\W)interest rates?\b/i,/(?:^|\W)bank of england\b/i,/(?:^|\W)central bank\w*\b/i,/(?:^|\W)mortgage\w*\b/i,/(?:^|\W)borrow\w*\b/i,/(?:^|\W)lend\w*\b/i],
- 'Tax & regulation':[/(?:^|\W)tax(?:es|ation|payer\w*)?\b/i,/(?:^|\W)budget\w*\b/i,/(?:^|\W)regulat\w*\b/i,/(?:^|\W)chancellor\b/i,/(?:^|\W)treasury\b/i,/(?:^|\W)levy\b/i],
- 'Energy & costs':[/(?:^|\W)energy\b/i,/(?:^|\W)electricit\w*\b/i,/(?:^|\W)fuel\b/i,/(?:^|\W)oil\b/i,/(?:^|\W)gas\b/i,/(?:^|\W)bills?\b/i,/(?:^|\W)overhead\w*\b/i],
- 'Supply chain & trade':[/(?:^|\W)supply chain\w*\b/i,/(?:^|\W)tariff\w*\b/i,/(?:^|\W)import\w*\b/i,/(?:^|\W)export\w*\b/i,/(?:^|\W)trade\b/i,/(?:^|\W)shipping\b/i,/(?:^|\W)freight\b/i],
- 'Funding & investment':[/(?:^|\W)fund(?:ing|raise|raising)\b/i,/(?:^|\W)invest\w*\b/i,/(?:^|\W)venture capital\b/i,/(?:^|\W)startup\w*\b/i,/(?:^|\W)valuation\w*\b/i,/(?:^|\W)IPO\b/i],
- 'Property & premises':[/(?:^|\W)propert\w*\b/i,/(?:^|\W)rent\w*\b/i,/(?:^|\W)landlord\w*\b/i,/(?:^|\W)office space\b/i,/(?:^|\W)housing\b/i,/(?:^|\W)high street\b/i],
- 'Legal & compliance':[/(?:^|\W)law(?:s|suit\w*)?\b/i,/(?:^|\W)legal\b/i,/(?:^|\W)court\w*\b/i,/(?:^|\W)complian\w*\b/i,/(?:^|\W)fine[ds]?\b/i,/(?:^|\W)tribunal\w*\b/i,/(?:^|\W)ruling\b/i],
- 'Sustainability':[/(?:^|\W)sustainab\w*\b/i,/(?:^|\W)climate\b/i,/(?:^|\W)carbon\b/i,/(?:^|\W)net zero\b/i,/(?:^|\W)emission\w*\b/i,/(?:^|\W)recycl\w*\b/i,/(?:^|\W)environment\w*\b/i]
+
+// Google News topic searches. Shard 4 is a safety net the browser requests only
+// when a domain came back empty, so it normally costs nothing. Not an official
+// API, so it is never the backbone.
+const FILL = [
+  ['gnews-self', 'Google News', 'Self', 1, 'https://news.google.com/rss/search?q=leadership+OR+%22decision+making%22+OR+burnout+when:2d&hl=en-GB&gl=GB&ceid=GB:en'],
+  ['gnews-people', 'Google News', 'People', 1, 'https://news.google.com/rss/search?q=%22workplace+culture%22+OR+hiring+OR+%22employee+retention%22+when:2d&hl=en-GB&gl=GB&ceid=GB:en'],
+  ['gnews-work', 'Google News', 'Work', 1, 'https://news.google.com/rss/search?q=%22small+business%22+technology+OR+automation+OR+productivity+when:2d&hl=en-GB&gl=GB&ceid=GB:en'],
+  ['gnews-business', 'Google News', 'Business', 1, 'https://news.google.com/rss/search?q=%22small+business%22+economy+OR+pricing+OR+customers+when:2d&hl=en-GB&gl=GB&ceid=GB:en'],
+];
+
+// One compiled regex per topic keeps the per-item cost to 28 tests, not 190.
+const TOPICS = {
+  'Decision-making': /\b(decisions?|decision-making|judge?ments?|thinking|brains?|psycholog\w+|creativ\w+|biases?|biased)\b/i,
+  'Leadership': /\b(leaders?|leadership|managers?|management|bosses|boss|executives?|chief exec\w*|founders?|board)\b/i,
+  'Burnout & wellbeing': /\b(burnout|stress\w*|wellbeing|well-being|mental health|sleep\w*|exhaust\w*)\b/i,
+  'Reputation & trust': /\b(reputation\w*|trust\w*|scandal\w*|apolog\w+|backlash|boycott\w*)\b/i,
+  'Team & culture': /\b(teams?|workplace\w*|staff|employees?|culture|morale|unions?|unionis\w+)\b/i,
+  'Hiring & talent': /\b(hire|hiring|hired|recruit\w*|vacanc\w+|talent|shortages?|apprentice\w*)\b/i,
+  'Jobs & careers': /\b(jobs?|careers?|redundan\w+|layoffs?|unemploy\w+|wages?|salar\w+)\b/i,
+  'Remote & hybrid work': /\b(remote work\w*|hybrid|work from home|return to (?:the )?office|four-day week|commut\w+)\b/i,
+  'Skills & training': /\b(skills?|training|reskill\w*|upskill\w*|qualifications?|graduates?)\b/i,
+  'AI & technology': /\b(AI|artificial intelligence|chatbots?|machine learning|technolog\w+|robots?|robotics|chips?)\b/i,
+  'Automation & productivity': /\b(automat\w+|productivit\w+|efficien\w+|workflows?)\b/i,
+  'Software & tools': /\b(software|apps?|platforms?|cloud|digital|subscriptions?)\b/i,
+  'Cybersecurity': /\b(cyber\w*|hacks?|hacked|hacking|breach\w*|ransomware|phishing|data (?:leak|protection|privacy)|frauds?|fraudulent)\b/i,
+  'Growth & customers': /\b(customers?|consumers?|retail\w*|growth|demand|shoppers?)\b/i,
+  'Marketing & advertising': /\b(marketing|advertis\w+|brands?|branding|campaigns?|social media|influencers?)\b/i,
+  'Sales & pricing': /\b(price|prices|pricing|sales|discounts?|revenues?|margins?)\b/i,
+  'Consumer confidence': /\b(confidence|sentiment|spending|households?|cost of living)\b/i,
+  'Competition': /\b(competit\w+|rivals?|rivalry|market share|monopol\w+|takeovers?|mergers?)\b/i,
+  'Innovation & R&D': /\b(innovat\w+|research and development|patents?|breakthroughs?|launch\w*)\b/i,
+  'Economy': /\b(econom\w+|inflation|recession\w*|GDP|growth forecasts?|markets?)\b/i,
+  'Interest rates': /\b(interest rates?|bank of england|central banks?|federal reserve|mortgages?|borrow\w+|lend\w+)\b/i,
+  'Tax & regulation': /\b(tax|taxes|taxation|taxpayers?|budgets?|regulat\w+|chancellor|treasury|levy)\b/i,
+  'Energy & costs': /\b(energy|electricit\w+|fuel|oil|gas|bills?|overheads?)\b/i,
+  'Supply chain & trade': /\b(supply chains?|tariffs?|imports?|exports?|trade|shipping|freight)\b/i,
+  'Funding & investment': /\b(funding|fundrais\w+|invest\w+|venture capital|startups?|valuations?|IPO)\b/i,
+  'Property & premises': /\b(propert\w+|rent|rents|rental|landlords?|office space|housing|high street)\b/i,
+  'Legal & compliance': /\b(law|laws|lawsuits?|legal|courts?|complian\w+|fine|fined|fines|tribunals?|ruling)\b/i,
+  'Sustainability': /\b(sustainab\w+|climate|carbon|net zero|emissions?|recycl\w+|environment\w*)\b/i,
 };
-function decode(s){return String(s||'').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1').replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(+n)).replace(/&#x([0-9a-f]+);/gi,(_,n)=>String.fromCodePoint(parseInt(n,16))).replace(/&(amp|lt|gt|quot|apos|nbsp);/g,(_,n)=>({amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:' '}[n])).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();}
-function field(item,tag){return decode(item.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`,'i'))?.[1]);}
-function parse(xml,source){const [id,name,domain,url]=source;const articles=[];for(const match of xml.matchAll(/<item(?:\s[^>]*)?>([\s\S]*?)<\/item>/gi)){
- const item=match[1],title=field(item,'title'),link=field(item,'link');if(!title||!link.startsWith('https://'))continue;
- let excerpt=field(item,'description').replace(/Continue reading.*/i,'').trim();if(excerpt.length>220)excerpt=excerpt.slice(0,220).replace(/\s+\S*$/,'')+'…';
- const date=Date.parse(field(item,'pubDate')),image=item.match(/<(?:media:thumbnail|media:content)[^>]*\surl=["'](https:\/\/[^"']+)["']/i)?.[1]||null;
- const hay=title+' '+excerpt;let topics=Object.entries(TOPICS).filter(([,patterns])=>patterns.some(pattern=>pattern.test(hay))).map(([name])=>name);
- if(!topics.length)topics=[{Self:'Decision-making',People:'Team & culture',Work:'AI & technology',Business:'Economy'}[domain]];
- articles.push({id:link.split('?')[0],url:link,title,excerpt,publishedAt:Number.isFinite(date)?new Date(date).toISOString():null,image,domain,source:name,sourceId:id,topics});if(articles.length>=18)break;
- }if(!articles.length)throw Error('No readable items');return articles;}
-export async function onRequestGet({request,waitUntil}){
- const key=new Request(new URL('/api/news',request.url),{method:'GET'}),cache=caches.default;
- const cached=await cache.match(key);if(cached)return cached;
- const results=await Promise.all(sources.map(async source=>{try{const r=await fetch(source[3],{headers:{'User-Agent':'ExploraSelfBroadcast/1.0 RSS reader'}});if(!r.ok)throw Error('Feed unavailable');const xml=await r.text();return {status:{id:source[0],name:source[1],domain:source[2],url:source[3],ok:true},articles:parse(xml,source)};}catch{return {status:{id:source[0],name:source[1],domain:source[2],url:source[3],ok:false,error:'Feed temporarily unavailable'},articles:[]};}}));
- const payload={fetchedAt:new Date().toISOString(),sources:results.map(r=>r.status),articles:results.flatMap(r=>r.articles),refreshHours:3};
- const response=new Response(JSON.stringify(payload),{status:payload.articles.length?200:503,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':payload.articles.length?`public, max-age=0, s-maxage=${TTL}`:'no-store','X-Content-Type-Options':'nosniff'}});
- if(payload.articles.length)waitUntil(cache.put(key,response.clone()));return response;
+
+// Each topic belongs to one of the four domains, so the quadrants are decided
+// by what a story is about, not by which feed happened to carry it.
+const TOPIC_DOMAIN = {
+  'Decision-making': 'Self', 'Leadership': 'Self', 'Burnout & wellbeing': 'Self',
+  'Reputation & trust': 'People', 'Team & culture': 'People', 'Hiring & talent': 'People',
+  'Jobs & careers': 'People', 'Skills & training': 'People',
+  'Remote & hybrid work': 'Work', 'AI & technology': 'Work', 'Automation & productivity': 'Work',
+  'Software & tools': 'Work', 'Cybersecurity': 'Work', 'Innovation & R&D': 'Work',
+  'Energy & costs': 'Work', 'Property & premises': 'Work', 'Legal & compliance': 'Work',
+  'Growth & customers': 'Business', 'Marketing & advertising': 'Business', 'Sales & pricing': 'Business',
+  'Consumer confidence': 'Business', 'Competition': 'Business', 'Economy': 'Business',
+  'Interest rates': 'Business', 'Tax & regulation': 'Business', 'Supply chain & trade': 'Business',
+  'Funding & investment': 'Business', 'Sustainability': 'Business',
+};
+
+const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+
+function decode(s) {
+  return String(s || '')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&(amp|lt|gt|quot|apos|nbsp);/g, (_, n) => ENT[n])
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function field(item, tags) {
+  for (const tag of tags) {
+    const m = item.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+    if (m) { const v = decode(m[1]); if (v) return v; }
+  }
+  return '';
+}
+
+/** RSS <item> and Atom <entry>, so research and tech desks are both readable. */
+function parse(xml, source) {
+  const [id, name, hint, weight] = source;
+  const body = xml.length > MAX_XML ? xml.slice(0, MAX_XML) : xml;
+  const out = [];
+  for (const match of body.matchAll(/<(?:item|entry)(?:\s[^>]*)?>([\s\S]*?)<\/(?:item|entry)>/gi)) {
+    const item = match[1];
+    const title = field(item, ['title']);
+    // Atom puts the URL in an attribute; RSS puts it in the element.
+    const link = field(item, ['link']) || item.match(/<link[^>]*\shref=["'](https?:\/\/[^"']+)["']/i)?.[1] || '';
+    if (!title || !/^https:\/\//.test(link)) continue;
+
+    let excerpt = field(item, ['description', 'summary', 'content']).replace(/Continue reading.*/i, '').trim();
+    // Google News descriptions are link markup, not prose. Better empty than noise.
+    if (/^(?:<|&lt;)?a\s|^View Full Coverage/i.test(excerpt) || excerpt.length < 40) excerpt = '';
+    if (excerpt.length > 220) excerpt = excerpt.slice(0, 220).replace(/\s+\S*$/, '') + '…';
+
+    const date = Date.parse(field(item, ['pubDate', 'published', 'updated']));
+    const image = item.match(/<(?:media:thumbnail|media:content|enclosure)[^>]*\s(?:url)=["'](https:\/\/[^"']+)["']/i)?.[1] || null;
+
+    const hay = title + ' ' + excerpt.slice(0, 200);
+    const topics = [];
+    for (const key in TOPICS) if (TOPICS[key].test(hay)) topics.push(key);
+
+    // Domain from the strongest topic signal; the feed's hint is only a fallback.
+    let domain = hint;
+    for (const t of topics) { const d = TOPIC_DOMAIN[t]; if (d) { domain = d; break; } }
+
+    out.push({
+      id: link.split('?')[0], url: link, title, excerpt,
+      publishedAt: Number.isFinite(date) ? new Date(date).toISOString() : null,
+      image, domain, source: name, sourceId: id, weight,
+      topics: topics.length ? topics : [],
+    });
+    if (out.length >= MAX_ITEMS) break;
+  }
+  if (!out.length) throw Error('No readable items');
+  return out;
+}
+
+async function readFeed(source) {
+  const status = { id: source[0], name: source[1], domain: source[2], url: source[4] };
+  try {
+    const r = await fetch(source[4], {
+      headers: { 'User-Agent': 'ExploraSelfBroadcast/2.0 (+https://broadcast.exploraself.com) RSS reader', Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml' },
+    });
+    if (!r.ok) throw Error('Feed unavailable');
+    return { status: { ...status, ok: true }, articles: parse(await r.text(), source) };
+  } catch {
+    return { status: { ...status, ok: false, error: 'Feed temporarily unavailable' }, articles: [] };
+  }
+}
+
+export async function onRequestGet({ request, waitUntil }) {
+  const url = new URL(request.url);
+  const raw = url.searchParams.get('s');
+  const shard = /^[1-4]$/.test(raw || '') ? Number(raw) : 1;
+  const sources = shard === 4 ? FILL : SHARDS[shard - 1];
+
+  const key = new Request(new URL(`/api/news?s=${shard}`, url), { method: 'GET' });
+  const cache = caches.default;
+  const cached = await cache.match(key);
+  if (cached) return cached;
+
+  const results = await Promise.all(sources.map(readFeed));
+  const payload = {
+    shard,
+    shards: SHARDS.length,
+    fetchedAt: new Date().toISOString(),
+    refreshHours: 3,
+    sources: results.map((r) => r.status),
+    articles: results.flatMap((r) => r.articles),
+  };
+
+  const ok = payload.articles.length > 0;
+  const response = new Response(JSON.stringify(payload), {
+    status: ok ? 200 : 503,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': ok ? `public, max-age=0, s-maxage=${TTL}` : 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+  if (ok) waitUntil(cache.put(key, response.clone()));
+  return response;
 }
