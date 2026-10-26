@@ -365,13 +365,14 @@ function preferences() {
 // ── Render ───────────────────────────────────────────────────────────────────
 
 function render() {
-  $('mainnav').innerHTML = views.map((v) => `<button data-view="${v}" ${view === v ? 'aria-current="page"' : ''}>${v}${v === 'Saved' && bookmarks.length ? `<span class="count">${bookmarks.length}</span>` : ''}</button>`).join('');
+  $('mainnav').innerHTML = views.map((v) => `<button class="${v === 'Explore' ? 'nav-explore' : ''}" data-view="${v}" ${view === v ? 'aria-current="page"' : ''}>${v === 'Explore' ? compass : ''}${v}${v === 'Saved' && bookmarks.length ? `<span class="count">${bookmarks.length}</span>` : ''}</button>`).join('');
+  document.body.classList.toggle('explore-world', view === 'Explore');
 
   const copy = {
     Today: ['TODAY’S EDITION · FOUR PERSPECTIVES', 'The news, and what you<br class="mobile-only"> do about it.'],
     Latest: ['EVERYTHING THE FEEDS CARRIED', 'The full picture.'],
     Saved: ['YOUR READING LIST', 'Ideas worth coming back to.'],
-    Explore: ['EXPAND YOUR PERSPECTIVE', 'A better leader starts with curiosity.'],
+    Explore: ['EXPLORASELF · OUR WORLD', 'Everything we have built<br class="mobile-only"> for the leader in you.'],
     Preferences: ['MAKE IT YOURS', 'A little more you.'],
   };
   $('viewEyebrow').textContent = copy[view][0];
@@ -462,7 +463,7 @@ function article(id) {
     <div class="rd-move" hidden>${move}</div>` : ''}
     <div class="rd-tail"${means ? ' hidden' : ''}>${relatedArticles(a)}${topicTeaser(a)}
     <p class="sourcefine">The question is an ExploraSelf prompt, not a claim made by the publisher. Full reporting remains at the original source.</p></div>`;
-  addFootClose($('reader'), 'Close and keep reading the edition');
+  addFootClose($('reader'));
   $('reader').showModal();
   $('reader').scrollTop = 0;
   // Let the story have the screen to itself for a beat.
@@ -577,6 +578,11 @@ document.addEventListener('click', (e) => {
     const target = document.querySelector(`[data-article="${CSS.escape(id)}"]`);
     if (target) target.closest('.story, .nrow')?.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
     else window.scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
+  if (b.hasAttribute('data-installretry')) {
+    $('installDialog').close();
+    if (installPrompt) install(); else toast('Not yet offered by this browser. Keep reading and try again.');
     return;
   }
   if (b.hasAttribute('data-install')) { install(); return; }
@@ -729,13 +735,31 @@ function hideBackBar() { const b = $('backbar'); if (b) { b.hidden = true; b.cla
 
 let installPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; });
+const installed = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+
 async function install() {
+  // Where the browser gives us an install API, the button simply installs.
   if (installPrompt) {
     await installPrompt.prompt();
     const choice = await installPrompt.userChoice;
     installPrompt = null;
     if (choice.outcome === 'accepted') toast('Installation requested');
-  } else { addFootClose($('installDialog')); $('installDialog').showModal(); }
+    return;
+  }
+  // Where it does not, there is no API to call on the reader's behalf. One
+  // short line, never a paragraph of browser instructions.
+  const body = $('installBody');
+  body.innerHTML = installed()
+    ? `<p class="inst-line">${icon('check')}<span>Broadcast is already installed on this device.</span></p>
+       <button class="goldbtn inst-btn close">Back to the edition</button>`
+    : isIOS()
+      ? `<p class="inst-line">${icon('arrow')}<span>Tap <b>Share</b> at the bottom of Safari, then <b>Add to Home Screen</b>.</span></p>
+         <button class="goldbtn inst-btn close">Got it</button>`
+      : `<p class="inst-line">${icon('clock')}<span>Your browser has not offered the install yet. It usually appears after a minute of reading.</span></p>
+         <button class="goldbtn inst-btn" data-installretry>Try again</button>`;
+  addFootClose($('installDialog'));
+  $('installDialog').showModal();
 }
 window.addEventListener('appinstalled', () => toast('Broadcast installed'));
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -759,5 +783,6 @@ document.addEventListener('click', (e) => {
 setInterval(refresh, 10800000);
 
 $('editionDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+if (installed()) document.querySelector('.install')?.remove();
 render(); refresh();
 initWelcome({ getData: () => data, getEdition: () => editionList(), prefs, persist, render, openedCount: () => bookmarks.length });
