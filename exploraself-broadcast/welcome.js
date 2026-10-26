@@ -14,7 +14,7 @@
 // The gate is client-side, so it is a courtesy, not security. It keeps honest
 // readers in the habit; it will not stop anyone determined.
 
-import { industryNames, whyLine, topicNames, overrides } from './content.js';
+import { industryGroups, whyLine, topicNames, overrides } from './content.js';
 import { icon } from './icons.js';
 
 const KEY = 'broadcast-welcome-v1';
@@ -52,7 +52,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 
 /** Three of today's real stories, one per domain where possible. */
 function sample() {
-  const list = (ctx.getData()?.articles || []).filter((a) => (a.topics || []).some((t) => topicNames.includes(t)));
+  const source = ctx.getEdition ? ctx.getEdition() : (ctx.getData()?.articles || []);
+  const list = source.filter((a) => (a.topics || []).some((t) => topicNames.includes(t)));
   const seen = new Set(), out = [];
   for (const a of list) {
     if (seen.has(a.domain)) continue;
@@ -71,8 +72,8 @@ function industryStage() {
   return `<div class="wc-stage wc-industry">
     <p class="wc-eyebrow">${icon('compass')}Before you read on</p>
     <h2>Everyone read the same headlines today.<br>Almost nobody worked out <em>what they meant</em>.</h2>
-    <p class="wc-lede">Name the work you are in. Every story then tells you where that kind of news usually lands in your trade — the part the headline leaves out.</p>
-    <div class="wc-chips">${industryNames.map((n) => `<button class="wc-chip" data-wc-industry="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+    <p class="wc-lede">Name the work you are in. Every story then tells you where that kind of news usually lands in your trade — the part the headline leaves out. Six groups, one choice.</p>
+    <div class="indgroups">${industryGroups.map((g, i) => `<details class="indgroup"${i === 0 ? ' open' : ''}><summary>${esc(g.label)}<span>${g.items.length}</span></summary><div class="indchips">${g.items.map((n) => `<button class="indchip" data-wc-industry="${esc(n)}">${esc(n)}</button>`).join('')}</div></details>`).join('')}</div>
     <button class="wc-skip" data-wc-skip>Skip for now</button>
   </div>`;
 }
