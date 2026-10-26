@@ -83,17 +83,40 @@ publisher's name, and a link to the original**. That is what RSS is for.
 - Never present an ExploraSelf prompt as something the publisher said. The
   reflection and the tool are ours and are labelled as ours.
 
-## 5. Every story is told in three parts
+## 5. News first. The commentary is earned, not imposed.
 
-Every story card and the reader view render, in this order:
+Broadcast is a news app before it is anything else. A reader scrolling the
+edition should meet far more headlines than opinion.
 
-1. **What happened** — the publisher's excerpt.
-2. **What it means for you** — `whyLine(topic, industry)` from `content.js`.
-3. **Your next move** — a tool from the field guide, and its one question.
+**On the page**, a story carries the publisher's headline, excerpt, name and
+time, plus **one line** of what it means for the reader's trade. That is all.
+Underneath each domain sits a wire list of the remaining headlines, because a
+list of stories is what makes this read as a news service.
 
-Do not ship a story card with fewer than three parts. This is the product.
+**In the reader**, once someone has opened a story and asked to go further,
+the fuller read appears a step at a time: what it means for you, then your
+next move and the tool behind it.
 
-## 6. The tools are Alexandru's, verbatim
+Do not push the commentary back onto the page. An earlier version put a
+headed "ExploraSelf read" block with a tool and a reflection on every card,
+plus a question and a three-step exercise under every domain. It buried the
+news and it was removed on Alexandru's instruction. If you are tempted to add
+our voice to the scroll, add a headline instead.
+
+## 6. The tools are Alexandru's — and they are context, not content
+
+`tools` in `content.js` is taken word for word from **99 Built to Lead**, his
+printed field guide. It exists so we understand **who we are speaking to** and
+can pick the right news for them. It is not a content well to draw from on
+every card.
+
+- A tool appears **only in the reader**, only after the reader has chosen to go
+  deeper, and only once per story.
+- The card never shows a tool name, a tool number, or "Tool 004 of 100". A
+  first-time reader has never heard of the guide, and jargon they cannot place
+  reads as noise.
+- **Do not invent tools.** Do not reword the questions. Do not generate new
+  ones with a model.
 
 `tools` in `content.js` is taken word for word from **99 Built to Lead**, his
 printed field guide. Each entry is a real tool with its real number, its real
