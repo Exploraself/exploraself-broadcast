@@ -190,7 +190,7 @@ function storyCard(a, size = 'card') {
       <div class="st-head"><span class="domainlabel">${domainIcon(a.domain)}${esc(a.domain)}</span>${meta(a)}</div>
       <h3><button class="headline" data-article="${esc(a.id)}">${esc(a.title)}</button></h3>
       ${a.excerpt ? `<p class="st-excerpt">${esc(a.excerpt)}</p>` : ''}
-      <div class="st-foot"><button class="textbtn" data-article="${esc(a.id)}">Open this story →</button><a class="textbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">${esc(a.source)} ↗</a></div>
+      <div class="st-foot"><button class="textbtn" data-article="${esc(a.id)}">${Array.isArray(a.body) && a.body.length ? 'Read it here →' : 'Open this story →'}</button><a class="textbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">${esc(a.source)} ↗</a></div>
     </div>
     ${meansLine(a)}
   </article>`;
@@ -450,8 +450,11 @@ function article(id) {
       <h2 id="readerTitle">${esc(a.title)}</h2>
       <div class="reader-meta">${esc(a.source)} · ${dateLabel(a.publishedAt)} · Publisher excerpt</div>
       ${a.image ? `<img class="reader-image" src="${esc(safeUrl(a.image))}" alt="">` : ''}
-      <p class="rd-body">${esc(a.excerpt || 'Read the original report for the full story and context.')}</p>
-      <div class="reader-actions"><a class="goldbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">Read at ${esc(a.source)} ↗</a>${saveButton(a, true)}</div>
+      ${Array.isArray(a.body) && a.body.length
+        ? `<div class="rd-article">${a.body.map((para) => `<p>${esc(para)}</p>`).join('')}</div>
+           <p class="rd-cont">${icon('arrow')}<span>This is what ${esc(a.source)} syndicates in its feed. The full piece continues at the source.</span></p>`
+        : `<p class="rd-body">${esc(a.excerpt || 'This publisher syndicates headlines only. The full story is at the source.')}</p>`}
+      <div class="reader-actions"><a class="goldbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">Continue at ${esc(a.source)} ↗</a>${saveButton(a, true)}</div>
     </div>
     ${means ? `<div class="rd-offer" hidden><button class="rd-step" data-reveal="means"><span class="rd-art">${compass}</span><span><strong>What this means for you</strong><small>Take it one step further, if you want to.</small></span><em aria-hidden="true">→</em></button></div>
     <div class="rd-means" hidden><p class="readhead">${compass}<span>The ExploraSelf read</span></p>${means}
@@ -557,6 +560,16 @@ document.addEventListener('click', (e) => {
   if (b.dataset.industry) { prefs.industry = b.dataset.industry; prefs.askedIndustry = true; persist(); render(); toast(`Reading through ${prefs.industry}`); return; }
   if (b.hasAttribute('data-askindustry')) { prefs.industry = ''; prefs.askedIndustry = false; persist(); render(); return; }
   if (b.hasAttribute('data-skipindustry')) { prefs.askedIndustry = true; persist(); render(); return; }
+  if (b.hasAttribute('data-backclose')) { awayFrom = null; hideBackBar(); return; }
+  if (b.dataset.back) {
+    const id = b.dataset.back;
+    awayFrom = null; hideBackBar();
+    if ($('reader').open) $('reader').close();
+    const target = document.querySelector(`[data-article="${CSS.escape(id)}"]`);
+    if (target) target.closest('.story, .nrow')?.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' });
+    else window.scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
   if (b.hasAttribute('data-install')) { install(); return; }
   if (b.classList.contains('close')) b.closest('dialog').close();
   if (b.id === 'refresh') refresh();
@@ -627,6 +640,49 @@ document.addEventListener('submit', (e) => {
   toast('Continue on Mailchimp to confirm. Subscription is not yet verified.');
 });
 
+// ── Coming back ──────────────────────────────────────────────────────────────
+// A publisher's page is theirs; we cannot place anything on it. But the source
+// opens in a new tab, so Broadcast is still here — and when the reader returns
+// to this tab we say so, and offer the way back into the report.
+let awayFrom = null;
+
+function returnBar() {
+  let bar = $('backbar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'backbar';
+    bar.hidden = true;
+    document.body.append(bar);
+  }
+  return bar;
+}
+
+function markAway(a) {
+  awayFrom = { id: a.id, title: a.title, source: a.source };
+  const bar = returnBar();
+  bar.innerHTML = `<div class="wrap bb-in">
+    <span class="bb-mark" aria-hidden="true">${compass}</span>
+    <span class="bb-text"><strong>Your report is still open here</strong><small>Reading &ldquo;${esc(a.title.slice(0, 70))}${a.title.length > 70 ? '…' : ''}&rdquo; at ${esc(a.source)}</small></span>
+    <button class="bb-go" data-back="${esc(a.id)}">Back to the report →</button>
+    <button class="bb-x" data-backclose aria-label="Dismiss">×</button>
+  </div>`;
+  bar.hidden = false;
+  bar.classList.add('in');
+}
+
+function welcomeBack() {
+  if (!awayFrom) return;
+  const bar = returnBar();
+  const strong = bar.querySelector('.bb-text strong');
+  const small = bar.querySelector('.bb-text small');
+  if (strong) strong.textContent = 'Welcome back.';
+  if (small) small.textContent = `Pick up your Intelligence Report where you left it${awayFrom.source ? ` after ${awayFrom.source}` : ''}.`;
+  bar.hidden = false;
+  bar.classList.add('in');
+}
+
+function hideBackBar() { const b = $('backbar'); if (b) { b.hidden = true; b.classList.remove('in'); } }
+
 let installPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; });
 async function install() {
@@ -639,7 +695,23 @@ async function install() {
 }
 window.addEventListener('appinstalled', () => toast('Broadcast installed'));
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
-document.addEventListener('visibilitychange', () => { if (!document.hidden && (!data || Date.now() - Date.parse(data.fetchedAt) >= 10800000)) refresh(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  welcomeBack();
+  if (!data || Date.now() - Date.parse(data.fetchedAt) >= 10800000) refresh();
+});
+
+// Any link out to a publisher leaves the trail back.
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a[target="_blank"][href^="https://"]');
+  if (!link) return;
+  try { if (new URL(link.href).hostname.endsWith('exploraself.com')) return; } catch { return; }
+  const card = link.closest('.story, #readerBody');
+  const id = card?.querySelector('[data-article]')?.dataset.article
+    || (card ? [...(data?.articles || []), ...bookmarks].find((x) => x.url === link.href)?.id : null);
+  const a = [...(data?.articles || []), ...bookmarks].find((x) => x.id === id) || { id: '', title: link.textContent.trim(), source: 'the publisher' };
+  markAway(a);
+}, true);
 setInterval(refresh, 10800000);
 
 $('editionDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });

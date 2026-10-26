@@ -15,9 +15,13 @@
 const TTL = 10800; // three hours
 // Bump whenever the feed list changes: the edge keeps each shard for three
 // hours, so without this a feed fix stays invisible until the TTL expires.
-const CACHE_VERSION = 5;
+const CACHE_VERSION = 6;
 const MAX_XML = 120000; // bound the work per feed
 const MAX_ITEMS = 10; // per feed
+// What a publisher puts in content:encoded, it has chosen to syndicate. We
+// show that and nothing more — we never fetch or scrape the article page —
+// and every story still carries its link out.
+const MAX_BODY = 1100;
 
 // [id, publisher, domain hint (fallback only), authority weight, url, ...alternates]
 // Alternates are tried in order when the first URL refuses or moves. They must
@@ -126,17 +130,59 @@ const TOPIC_DOMAIN = {
   'Funding & investment': 'Business', 'Sustainability': 'Business',
 };
 
-const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+// Publishers use far more than the five XML entities, and an unmapped one
+// lands in the page as literal &ldquo; which looks exactly like a bug.
+const ENT = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'",
+  ldquo: '\u201c', rdquo: '\u201d', lsquo: '\u2018', rsquo: '\u2019',
+  sbquo: '\u201a', bdquo: '\u201e', laquo: '\u00ab', raquo: '\u00bb',
+  mdash: '\u2014', ndash: '\u2013', hellip: '\u2026', middot: '\u00b7',
+  bull: '\u2022', prime: '\u2032', Prime: '\u2033',
+  pound: '\u00a3', euro: '\u20ac', cent: '\u00a2', yen: '\u00a5',
+  deg: '\u00b0', plusmn: '\u00b1', times: '\u00d7', divide: '\u00f7',
+  frac12: '\u00bd', frac14: '\u00bc', frac34: '\u00be',
+  copy: '\u00a9', reg: '\u00ae', trade: '\u2122', sect: '\u00a7', para: '\u00b6',
+  dagger: '\u2020', Dagger: '\u2021', permil: '\u2030',
+  larr: '\u2190', rarr: '\u2192', harr: '\u2194', darr: '\u2193', uarr: '\u2191',
+  eacute: '\u00e9', egrave: '\u00e8', agrave: '\u00e0', ccedil: '\u00e7',
+  uuml: '\u00fc', ouml: '\u00f6', auml: '\u00e4', szlig: '\u00df',
+  ntilde: '\u00f1', aacute: '\u00e1', iacute: '\u00ed', oacute: '\u00f3', uacute: '\u00fa',
+  ensp: ' ', emsp: ' ', thinsp: ' ', shy: '', zwj: '', zwnj: '',
+};
 
-function decode(s) {
-  return String(s || '')
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/<[^>]+>/g, ' ')
+function entities(t) {
+  return t
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
-    .replace(/&(amp|lt|gt|quot|apos|nbsp);/g, (_, n) => ENT[n])
-    .replace(/\s+/g, ' ')
-    .trim();
+    // A named entity we do not know is dropped rather than shown raw.
+    .replace(/&([a-zA-Z][a-zA-Z0-9]{1,9}|#\d{1,6});/g, (m, n) => (n in ENT ? ENT[n] : /^#/.test(n) ? m : ''));
+}
+
+/** Entities are decoded BEFORE tags are stripped, then again afterwards.
+ *  Many feeds escape their own markup, so &lt;p&gt; would otherwise survive
+ *  tag-stripping and land in the page as a literal <p>. */
+function decode(s) {
+  let t = String(s || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+  t = entities(t).replace(/<[^>]+>/g, ' ');
+  return entities(t).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/** The same, but keeping paragraph breaks, for what a publisher chose to put
+ *  in its feed. Returns plain text only — no markup ever reaches the page. */
+function decodeBlocks(s, limit) {
+  let t = String(s || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+  t = entities(t);
+  t = t.replace(/<\/(p|div|li|h[1-6]|blockquote)>/gi, '\n\n').replace(/<br\s*\/?>/gi, '\n');
+  t = entities(t.replace(/<[^>]+>/g, ' ')).replace(/<[^>]+>/g, ' ');
+  const paras = t.split(/\n{2,}/).map((x) => x.replace(/[ \t\u00a0]+/g, ' ').trim()).filter((x) => x.length > 2);
+  const out = [];
+  let used = 0;
+  for (const para of paras) {
+    if (used + para.length > limit) break;
+    out.push(para);
+    used += para.length;
+  }
+  return out;
 }
 
 function field(item, tags) {
@@ -164,10 +210,16 @@ function parse(xml, source) {
     if (/^(?:<|&lt;)?a\s|^View Full Coverage/i.test(excerpt) || excerpt.length < 40) excerpt = '';
     if (excerpt.length > 220) excerpt = excerpt.slice(0, 220).replace(/\s+\S*$/, '') + '…';
 
+    // Only what the publisher itself placed in the feed.
+    const rich = item.match(/<content:encoded(?:\s[^>]*)?>([\s\S]*?)<\/content:encoded>/i)?.[1]
+      || item.match(/<content(?:\s[^>]*)?>([\s\S]*?)<\/content>/i)?.[1] || '';
+    const body = rich ? decodeBlocks(rich, MAX_BODY) : [];
+    const bodyText = body.join(' ');
+
     const date = Date.parse(field(item, ['pubDate', 'published', 'updated']));
     const image = item.match(/<(?:media:thumbnail|media:content|enclosure)[^>]*\s(?:url)=["'](https:\/\/[^"']+)["']/i)?.[1] || null;
 
-    const hay = title + ' ' + excerpt.slice(0, 200);
+    const hay = title + ' ' + (excerpt || bodyText).slice(0, 200);
     const topics = [];
     for (const key in TOPICS) if (TOPICS[key].test(hay)) topics.push(key);
 
@@ -177,6 +229,9 @@ function parse(xml, source) {
 
     out.push({
       id: link.split('?')[0], url: link, title, excerpt,
+      // Carried only when the publisher syndicated materially more than the
+      // excerpt; otherwise the excerpt already is the whole of it.
+      body: bodyText.length > excerpt.length + 200 ? body : undefined,
       publishedAt: Number.isFinite(date) ? new Date(date).toISOString() : null,
       image, domain, source: name, sourceId: id, weight,
       topics: topics.length ? topics : [],

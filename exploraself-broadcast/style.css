@@ -549,3 +549,34 @@
    pins to the bottom of the card and the pair stays level. */
 .story.st-card .st-news{flex:1;display:flex;flex-direction:column}
 .story.st-card .st-news .st-foot{margin-top:auto}
+/* Reading in the app: what the publisher syndicated, set for reading. */
+.rd-article{margin:20px 0 6px}
+.rd-article p{font-size:16.5px;line-height:1.85;color:#3e4a54;margin:0 0 16px}
+.rd-article p:first-child{font-size:17.5px;color:#333f49}
+.rd-cont{display:flex;gap:10px;align-items:flex-start;font-size:11.5px;line-height:1.65;color:var(--muted);
+ border-top:1px solid var(--line);padding-top:13px;margin-top:4px}
+.rd-cont .ico{width:15px;height:15px;color:var(--gold-ink);flex:none;margin-top:2px}
+
+/* The way back. A publisher's page is theirs — we cannot put anything on it —
+   so this waits in our tab and greets the reader when they return. */
+#backbar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--brown);color:var(--cream);
+ border-top:2px solid var(--gold);box-shadow:0 -10px 30px #2b1b1226}
+#backbar[hidden]{display:none}
+#backbar.in{animation:bb-up .35s ease-out both}
+@keyframes bb-up{from{transform:translateY(100%)}to{transform:none}}
+.bb-in{display:flex;align-items:center;gap:16px;padding-block:12px}
+.bb-mark .compass{width:28px;height:28px;color:var(--gold);flex:none}
+.bb-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bb-text strong{font-family:var(--serif);font-size:17px;font-weight:500}
+.bb-text small{font-size:11px;color:#c0b19a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bb-go{margin-left:auto;background:var(--gold);color:var(--brown);font-size:12px;font-weight:600;padding:11px 17px;white-space:nowrap}
+.bb-go:hover{background:var(--paper);color:var(--brown)}
+.bb-x{font-size:22px;width:36px;height:36px;color:#c0b19a;flex:none}
+.bb-x:hover{color:var(--cream)}
+@media(max-width:720px){
+ .bb-in{gap:11px;padding-block:10px}
+ .bb-mark{display:none}
+ .bb-text strong{font-size:15px}
+ .bb-go{padding:10px 13px;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){#backbar.in{animation:none}}
