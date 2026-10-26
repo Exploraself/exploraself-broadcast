@@ -103,19 +103,20 @@ function joinStage(hard = false) {
   return `<div class="wc-stage wc-join">
     <p class="wc-eyebrow">${icon('clock')}${hard ? 'You have read the edition' : 'This edition is not kept'}</p>
     <h2>${hard
-      ? `Eight minutes in.<br>Make tomorrow's edition <em>yours</em>.`
+      ? `Eight minutes in.<br>Let us send you <em>tomorrow's</em>.`
       : left ? `This edition is replaced in <em>${esc(left)}</em>.` : `Tomorrow's eight land in the morning.`}</h2>
     <p class="wc-lede">Broadcast keeps no back issues.${rest ? ` ${rest} ${rest === 1 ? 'story' : 'stories'} in today's edition you have not opened yet.` : ''} Tomorrow, eight more, ${lens} — five minutes, and you walk in knowing what moved.</p>
+    <p class="wc-offer">${icon('book')}<span>Join and the whole free library opens now: <b>five assessments</b>, <b>every ebook and workbook</b>, and <b>one tool a week</b> from the field guide of 100.</span></p>
     <form class="wc-form mcform" data-mc="broadcast">
       <label class="wc-sr" for="wcName">First name</label>
       <input id="wcName" name="FNAME" type="text" autocomplete="given-name" placeholder="First name" required>
       <label class="wc-sr" for="wcEmail">Email address</label>
       <input id="wcEmail" type="email" autocomplete="email" placeholder="Your email address" required>
-      <button class="wc-go" type="submit">Join Broadcast →</button>
+      <button class="wc-go" type="submit">Send me the library →</button>
       <label class="wc-consent"><input type="checkbox" class="mcconsent"><span>Also send me the weekly ExploraSelf ideas. Optional, and you can stop any time.</span></label>
       <p class="wc-fine">${hard ? 'Your name and email keep Broadcast free to read. ' : ''}Mailchimp (Intuit) processes them. <a href="https://exploraself.com/privacy" target="_blank" rel="noopener">Privacy policy</a>.</p>
     </form>
-    ${hard ? '' : '<button class="wc-skip" data-wc-later>Not yet, let me read</button>'}
+    ${hard ? '' : '<button class="wc-skip" data-wc-later>No thank you — let me keep reading</button>'}
   </div>`;
 }
 
