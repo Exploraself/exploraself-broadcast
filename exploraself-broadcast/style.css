@@ -515,3 +515,37 @@
  .rb-pill .rp-t{display:inline;font-size:10.5px}
  .rb-pill{padding:9px 8px}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MORE NEWS, LESS OF US
+   The card carries the story and one line of what it means. The wire list
+   underneath each domain is what makes this read as a news service.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.st-card .st-excerpt{font-size:13.5px;line-height:1.75;color:#44505a;margin-top:13px}
+.st-news .st-foot{border-top:1px solid var(--line);margin-top:16px;padding-top:12px}
+.st-means{display:flex;gap:10px;align-items:flex-start;background:var(--cream);border-top:1px solid var(--gold);
+ padding:13px 24px 15px;font-size:12px;line-height:1.65;color:#4e4639;margin:0}
+.st-means .ico{width:15px;height:15px;color:var(--gold-ink);flex:none;margin-top:2px}
+.st-means b{color:var(--brown);font-weight:600}
+
+/* The wire list: headlines, publishers, times. */
+.morelist{margin-top:22px;border-top:2px solid var(--brown)}
+.morehead{display:flex;justify-content:space-between;align-items:center;padding:11px 0 4px;font-size:10px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold-ink)}
+.morehead span+span{color:var(--muted);letter-spacing:.6px}
+.nrow{display:flex;align-items:baseline;justify-content:space-between;gap:20px;width:100%;text-align:left;
+ padding:13px 2px;border-bottom:1px solid var(--line);transition:background .15s,padding .15s}
+.nrow:hover{background:var(--cream);padding-inline:10px}
+.nrow-t{font-family:var(--serif);font-size:17.5px;font-weight:500;line-height:1.3;color:var(--brown);letter-spacing:-.2px}
+.nrow:hover .nrow-t{color:var(--gold-ink)}
+.nrow-m{font-size:10px;letter-spacing:.5px;color:var(--muted);white-space:nowrap;flex:none}
+
+@media(max-width:720px){
+ .st-means{padding:12px 20px 14px}
+ .nrow{gap:10px;flex-direction:column;align-items:flex-start;padding-block:12px}
+ .nrow-t{font-size:16px}
+ .morelist{margin-top:18px}
+}
+/* The news block absorbs the extra height so the "what it means" strip always
+   pins to the bottom of the card and the pair stays level. */
+.story.st-card .st-news{flex:1;display:flex;flex-direction:column}
+.story.st-card .st-news .st-foot{margin-top:auto}

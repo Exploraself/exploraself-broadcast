@@ -81,20 +81,22 @@ test('excerpts stay capped and the link to the publisher survives', () => {
 
 // ── Every story is told in three parts ───────────────────────────────────────
 
-test('the three labels are present and in order', () => {
-  for (const label of ['What happened', 'What it means for you', 'Your next move']) {
-    assert.ok(app.includes(label), `the "${label}" label is the product; do not remove it`);
-  }
-  // Order is checked inside the card itself, not across the whole file.
-  // Order is checked inside the card template: the news block carries "what
-  // happened", and our read follows it with means before move.
-  const card = app.slice(app.indexOf('function storyCard('), app.indexOf("document.addEventListener('error'"));
-  assert.match(card, /meansBlock\(a\)\s*\+\s*moveBlock\(a\)/, 'means is read before move');
-  const order = ['part what', 'st-read'].map((l) => card.indexOf(l));
-  assert.ok(order.every((i) => i >= 0), 'the news block and the read block both render');
-  assert.ok(order[0] < order[1], 'the news comes before our read, never the other way round');
-  assert.match(app, /function meansBlock\(/);
-  assert.match(app, /function moveBlock\(/);
+test('the card carries the news and one line, never a block of our commentary', () => {
+  const card = app.slice(app.indexOf('function storyCard('), app.indexOf('/** A compact wire row'));
+  assert.match(card, /st-excerpt/, 'the publisher excerpt is on the card');
+  assert.match(card, /meansLine\(a\)/, 'and one line of what it means');
+  assert.doesNotMatch(card, /moveBlock|st-read|readhead/, 'the tool and the headed read belong in the reader, not the scroll');
+  const reader = app.slice(app.indexOf('function article(id)'), app.indexOf('function relatedArticles'));
+  assert.match(reader, /meansBlock\(a\)/, 'the fuller read lives in the reader');
+  assert.match(reader, /moveBlock\(a, true\)/, 'with the tool, and its provenance, once they have gone deeper');
+});
+
+test('each domain shows a wire list, so the edition reads as news', () => {
+  assert.match(app, /function newsRow\(/);
+  assert.match(app, /MORE_PER_DOMAIN = \d+/);
+  const chapter = app.slice(app.indexOf('function chapter(d, i, block)'), app.indexOf('function todayReport()'));
+  assert.match(chapter, /morelist/, 'the remaining headlines are listed under each domain');
+  assert.doesNotMatch(chapter, /ch-q|Write one fact you can verify/, 'the reflection exercise was removed from the scroll on instruction');
 });
 
 test('a domain comes from the story topic, not from the feed that carried it', () => {

@@ -36,7 +36,8 @@ if (!Array.isArray(bookmarks)) bookmarks = [];
 const bookmarkIcon = '<svg viewBox="0 0 20 24" aria-hidden="true"><path d="M4 3h12v18l-6-4-6 4z"/></svg>';
 const compass = '<svg class="compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 2.5 21.5 12 12 21.5 2.5 12 12 2.5Z"/><path d="m12 5.7 2 4.3 4.3 2-4.3 2-2 4.3-2-4.3-4.3-2 4.3-2 2-4.3Z" fill="currentColor" stroke="none"/></svg>';
 
-const PER_DOMAIN = 2; // the daily edition: two stories per domain
+const PER_DOMAIN = 2;        // two told in full
+const MORE_PER_DOMAIN = 6;   // and the rest of the domain as a wire list
 const reportTitles = { Self: 'Lead yourself', People: 'Lead people', Work: 'Rethink work', Business: 'Beyond business' };
 const descriptions = { Self: 'Clarity, judgement and the person behind your decisions.', People: 'Teams, trust and the relationships that make work possible.', Work: 'Technology, priorities and better ways of getting things done.', Business: 'Markets, customers and the forces shaping your business.' };
 const questions = { Self: 'What assumption deserves a second look before your next important decision?', People: 'How might this affect the people you lead — and what conversation would help?', Work: 'Where could this change a process, a priority or a decision in your business?', Business: 'What would this mean for your customers, your offer or your next investment of time?' };
@@ -89,14 +90,19 @@ function dedupe(list) {
 }
 const sourceAllowed = (a) => !prefs.sources.length || prefs.sources.includes(a.source);
 
-/** The eight: the two best-scoring stories in each domain. */
+/** Two stories told in full per domain, plus the rest of the domain as a list.
+ *  Broadcast is a news app before it is anything else: the reader should see
+ *  far more headlines than commentary. */
 function edition() {
-  const pool = (data?.articles || []).filter(sourceAllowed).map((a) => ({ a, s: score(a) })).sort((x, y) => y.s - x.s);
+  const pool = dedupe((data?.articles || []).filter(sourceAllowed)).map((a) => ({ a, s: score(a) })).sort((x, y) => y.s - x.s);
   const out = {};
-  for (const d of domains) out[d] = pool.filter((p) => p.a.domain === d).slice(0, PER_DOMAIN).map((p) => p.a);
+  for (const d of domains) {
+    const all = pool.filter((p) => p.a.domain === d).map((p) => p.a);
+    out[d] = { lead: all.slice(0, PER_DOMAIN), more: all.slice(PER_DOMAIN, PER_DOMAIN + MORE_PER_DOMAIN), total: all.length };
+  }
   return out;
 }
-function editionList() { const e = edition(); return domains.flatMap((d) => e[d]); }
+function editionList() { const e = edition(); return domains.flatMap((d) => e[d].lead); }
 
 // ── Promotion as banners, never as another paragraph ─────────────────────────
 // Three fixed sizes, each filling exactly one grid slot so the rhythm holds.
@@ -146,7 +152,17 @@ function meta(a) {
   return `<div class="meta">${icon('clock')}<span>${esc(a.source)}</span><span>·</span><time datetime="${esc(a.publishedAt)}">${dateLabel(a.publishedAt)}</time>${a.stale ? '<span>· Cached</span>' : ''}${saveButton(a)}</div>`;
 }
 
-/** REFORM — where this kind of news usually lands in the reader's trade. */
+/** REFORM — where this kind of news usually lands in the reader's trade.
+ *  On a card this is ONE line folded under the story, not a section with a
+ *  heading of its own. The fuller read waits in the reader. */
+function meansLine(a) {
+  const t = topicFor(a);
+  const line = t ? whyLine(t, prefs.industry) : '';
+  if (!line) return '';
+  return `<p class="st-means">${icon('market')}<span><b>What it means for you${prefs.industry ? ' · ' + esc(prefs.industry) : ''}:</b> ${esc(line)}</span></p>`;
+}
+
+/** The fuller version, used only inside the reader. */
 function meansBlock(a) {
   const t = topicFor(a);
   const line = t ? whyLine(t, prefs.industry) : '';
@@ -169,16 +185,24 @@ function moveBlock(a, provenance = false) {
 }
 
 function storyCard(a, size = 'card') {
-  const read = meansBlock(a) + moveBlock(a);
   return `<article class="story st-${size}">
     <div class="st-news">
       <div class="st-head"><span class="domainlabel">${domainIcon(a.domain)}${esc(a.domain)}</span>${meta(a)}</div>
       <h3><button class="headline" data-article="${esc(a.id)}">${esc(a.title)}</button></h3>
-      ${a.excerpt ? `<div class="part what"><p class="partlabel">${icon('book')}What happened</p><p>${esc(a.excerpt)}</p></div>` : ''}
+      ${a.excerpt ? `<p class="st-excerpt">${esc(a.excerpt)}</p>` : ''}
       <div class="st-foot"><button class="textbtn" data-article="${esc(a.id)}">Open this story →</button><a class="textbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">${esc(a.source)} ↗</a></div>
     </div>
-    ${read ? `<div class="st-read"><p class="readhead">${compass}<span>The ExploraSelf read</span></p>${read}</div>` : ''}
+    ${meansLine(a)}
   </article>`;
+}
+
+/** A compact wire row: headline, publisher, time. This is what makes it read
+ *  like a news service rather than a column. */
+function newsRow(a) {
+  return `<button class="nrow" data-article="${esc(a.id)}">
+    <span class="nrow-t">${esc(a.title)}</span>
+    <span class="nrow-m">${esc(a.source)} · ${dateLabel(a.publishedAt)}</span>
+  </button>`;
 }
 
 document.addEventListener('error', (e) => {
@@ -207,20 +231,21 @@ function industryPicker(open = false) {
 
 function reportBar() {
   const live = (data?.sources || []).filter((s) => s.ok).length;
+  const count = dedupe((data?.articles || []).filter(sourceAllowed)).length;
   const when = data ? new Date(data.fetchedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
   return `<section class="rptbar">
     <div class="rb-left">
       <p class="eyebrow">${compass}THE LEADER&rsquo;S INTELLIGENCE REPORT · FREE, NO EMAIL</p>
       <h2 class="rb-triad"><b>Inform.</b> <b>Reform.</b> <b>Transform.</b></h2>
     </div>
-    <p class="rb-meta">8 stories · 5 minutes${when ? ` · updated ${esc(when)}` : ''}${live ? ` · ${live} publishers` : ''}</p>
+    <p class="rb-meta">${count} stories today${live ? ` from ${live} publishers` : ''}${when ? ` · updated ${esc(when)}` : ''}</p>
   </section>`;
 }
 
 /** The four perspectives, visible the moment you arrive, in one short row. */
 function perspectives(e) {
   return `<nav class="persp" aria-label="The four perspectives">${domains.map((d, i) => {
-    const n = (e[d] || []).length;
+    const n = e[d]?.total || 0;
     return `<a class="pcard" href="#chapter-${i}">
       <span class="p-top"><span class="p-n">0${i + 1}</span>${domainIcon(d)}</span>
       <strong class="p-t">${reportTitles[d]}</strong>
@@ -229,31 +254,31 @@ function perspectives(e) {
   }).join('')}</nav>`;
 }
 
-function chapter(d, i, list) {
+function chapter(d, i, block) {
+  const lead = block.lead || [], more = block.more || [];
   return `<section class="chapter" id="chapter-${i}">
     <header class="ch-head">
       <span class="ch-n">0${i + 1}</span>
       <div><p class="eyebrow">${d.toUpperCase()} · ${esc(descriptions[d])}</p><h3>${reportTitles[d]}</h3></div>
       ${domainIcon(d)}
     </header>
-    ${list.length ? `<div class="ch-grid">${list.map((a) => storyCard(a)).join('')}</div>` : `<p class="ch-none">No story in this domain cleared the bar today. The next edition lands within three hours.</p>`}
-    <div class="ch-foot">
-      <div class="ch-q"><p class="partlabel">${icon('spark')}The question to take back</p><p>${esc(questions[d])}</p>
-        <ol><li>Write one fact you can verify.</li><li>Name one assumption you may be making.</li><li>Choose one small action and a date to review it.</li></ol></div>
-      ${banner(assessments.find((x) => x.domain === d) || pickPromo(i), 'tile')}
-    </div>
+    ${lead.length ? `<div class="ch-grid">${lead.map((a) => storyCard(a)).join('')}</div>` : `<p class="ch-none">Nothing in this domain cleared the bar today. The next edition lands within three hours.</p>`}
+    ${more.length ? `<div class="morelist">
+      <p class="morehead"><span>More in ${esc(d.toLowerCase())}</span><span>${more.length} ${more.length === 1 ? 'story' : 'stories'}</span></p>
+      ${more.map(newsRow).join('')}
+    </div>` : ''}
   </section>`;
 }
 
 function todayReport() {
   if (!data) return `<div class="loading">Preparing your edition…</div>`;
   const e = edition();
-  const total = domains.reduce((n, d) => n + (e[d] || []).length, 0);
+  const total = domains.reduce((n, d) => n + (e[d]?.lead?.length || 0), 0);
   if (!total) return empty('Your next edition is on its way.', 'No publisher feed answered in time. You can still set your preferences and explore the free tools.');
   return `${reportBar()}
     ${prefs.industry ? industryPicker() : ''}
     ${perspectives(e)}
-    ${domains.map((d, i) => chapter(d, i, e[d] || []) + (i === 1 ? bandBanner() : '')).join('')}
+    ${domains.map((d, i) => chapter(d, i, e[d] || {}) + (i === 1 ? bandBanner() : '')).join('')}
     <div class="rpt-actions"><button class="goldbtn" id="downloadReport">Save today’s report ↓</button><button class="textbtn" data-view="Latest">See everything the feeds carried →</button></div>
     ${newsletter()}`;
 }
@@ -343,7 +368,7 @@ function render() {
   $('mainnav').innerHTML = views.map((v) => `<button data-view="${v}" ${view === v ? 'aria-current="page"' : ''}>${v}${v === 'Saved' && bookmarks.length ? `<span class="count">${bookmarks.length}</span>` : ''}</button>`).join('');
 
   const copy = {
-    Today: ['EIGHT STORIES · FOUR PERSPECTIVES · FIVE MINUTES', 'Today, and what you<br class="mobile-only"> do about it.'],
+    Today: ['TODAY’S EDITION · FOUR PERSPECTIVES', 'The news, and what you<br class="mobile-only"> do about it.'],
     Latest: ['EVERYTHING THE FEEDS CARRIED', 'The full picture.'],
     Saved: ['YOUR READING LIST', 'Ideas worth coming back to.'],
     Explore: ['EXPAND YOUR PERSPECTIVE', 'A better leader starts with curiosity.'],
