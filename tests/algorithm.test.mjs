@@ -86,10 +86,13 @@ test('the three labels are present and in order', () => {
     assert.ok(app.includes(label), `the "${label}" label is the product; do not remove it`);
   }
   // Order is checked inside the card itself, not across the whole file.
-  const card = app.slice(app.indexOf('function storyCard('), app.indexOf('document.addEventListener(\'error\''));
-  const order = ['part what', 'meansBlock(a)', 'moveBlock(a)'].map((l) => card.indexOf(l));
-  assert.ok(order.every((i) => i >= 0), 'the card renders all three parts');
-  assert.deepEqual([...order].sort((a, b) => a - b), order, 'the three parts stay in order');
+  // Order is checked inside the card template: the news block carries "what
+  // happened", and our read follows it with means before move.
+  const card = app.slice(app.indexOf('function storyCard('), app.indexOf("document.addEventListener('error'"));
+  assert.match(card, /meansBlock\(a\)\s*\+\s*moveBlock\(a\)/, 'means is read before move');
+  const order = ['part what', 'st-read'].map((l) => card.indexOf(l));
+  assert.ok(order.every((i) => i >= 0), 'the news block and the read block both render');
+  assert.ok(order[0] < order[1], 'the news comes before our read, never the other way round');
   assert.match(app, /function meansBlock\(/);
   assert.match(app, /function moveBlock\(/);
 });

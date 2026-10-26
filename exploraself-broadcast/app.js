@@ -154,26 +154,30 @@ function meansBlock(a) {
   return `<div class="part means"><p class="partlabel">${icon('market')}What it means for you${prefs.industry ? ' · ' + esc(prefs.industry) : ''}</p><p>${esc(line)}</p>${prefs.industry ? '' : '<button class="textbtn" data-askindustry>Name your trade to sharpen this →</button>'}</div>`;
 }
 
-/** TRANSFORM — one tool from the field guide, and the single question it asks. */
-function moveBlock(a) {
+/** TRANSFORM — the move itself. No codename, no "tool 004 of 100": the reader
+ *  has never heard of the field guide, and jargon they cannot place reads as
+ *  noise. Where the move comes from is revealed later, as a discovery. */
+function moveBlock(a, provenance = false) {
   const t = topicFor(a);
   if (!t) return '';
   const m = moveFor(t, a.id);
   if (!m) return '';
   return `<div class="part move"><p class="partlabel">${icon('target')}Your next move</p>
-    <p class="movetool"><span class="movename">${esc(m.n)}</span><span class="moveno">Tool ${String(m.no).padStart(3, '0')} of 100</span></p>
     <p class="moveline">${esc(m.line)}</p>
-    <p class="moveask">${esc(m.ask)}</p></div>`;
+    <p class="moveask">${esc(m.ask)}</p>
+    ${provenance ? `<p class="movefrom">${icon('book')}<span>One of a hundred practical tools in Alexandru&rsquo;s field guide. This one is called <b>${esc(m.n)}</b>.</span></p>` : ''}</div>`;
 }
 
 function storyCard(a, size = 'card') {
+  const read = meansBlock(a) + moveBlock(a);
   return `<article class="story st-${size}">
-    <div class="st-head"><span class="domainlabel">${domainIcon(a.domain)}${esc(a.domain)}</span>${meta(a)}</div>
-    <h3><button class="headline" data-article="${esc(a.id)}">${esc(a.title)}</button></h3>
-    ${a.excerpt ? `<div class="part what"><p class="partlabel">${icon('book')}What happened</p><p>${esc(a.excerpt)}</p></div>` : ''}
-    ${meansBlock(a)}
-    ${moveBlock(a)}
-    <div class="st-foot"><button class="textbtn" data-article="${esc(a.id)}">Open this story →</button><a class="textbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">${esc(a.source)} ↗</a></div>
+    <div class="st-news">
+      <div class="st-head"><span class="domainlabel">${domainIcon(a.domain)}${esc(a.domain)}</span>${meta(a)}</div>
+      <h3><button class="headline" data-article="${esc(a.id)}">${esc(a.title)}</button></h3>
+      ${a.excerpt ? `<div class="part what"><p class="partlabel">${icon('book')}What happened</p><p>${esc(a.excerpt)}</p></div>` : ''}
+      <div class="st-foot"><button class="textbtn" data-article="${esc(a.id)}">Open this story →</button><a class="textbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">${esc(a.source)} ↗</a></div>
+    </div>
+    ${read ? `<div class="st-read"><p class="readhead">${compass}<span>The ExploraSelf read</span></p>${read}</div>` : ''}
   </article>`;
 }
 
@@ -310,12 +314,13 @@ function explore() {
 
 function newsletter() {
   return `<section class="newsletter"><p class="eyebrow">${icon('compass')}OPTIONAL · PREFER IT IN YOUR INBOX?</p>
-    <h2>One useful idea. One better week.</h2>
-    <p>Broadcast stays free to read here with no email. Give your name and address only if you would rather it came to you.</p>
+    <h2>One tool a week. Yours to keep.</h2>
+    <p>Join and you get the whole free library the moment you arrive: five leadership assessments, the complete ebook and workbook collection, and one practical tool every week — drawn from Alexandru's field guide of 100.</p>
+    <p class="nl-kind">Broadcast stays free to read here with no email, always. This is only for people who would rather it came to them.</p>
     <form class="mcform" data-mc="oneIdea"><div class="formrow">
       <label class="sr-only" for="nlName">First name</label><input id="nlName" name="FNAME" type="text" autocomplete="given-name" placeholder="First name">
       <label class="sr-only" for="nlEmail">Email address</label><input id="nlEmail" type="email" required autocomplete="email" placeholder="Your email address">
-      <button class="goldbtn" type="submit">Join the weekly idea ↗</button></div>
+      <button class="goldbtn" type="submit">Send me the library ↗</button></div>
     <label class="consent"><input type="checkbox" class="mcconsent" required><span>I agree to receive the weekly ExploraSelf idea and relevant emails. I can unsubscribe at any time. <a href="https://exploraself.com/privacy" target="_blank" rel="noopener">Privacy policy</a>.</span></label>
     <small>Mailchimp (Intuit) processes your name and email. Submission opens the official Mailchimp form to confirm; no subscription is asserted here.</small></form></section>`;
 }
@@ -360,7 +365,7 @@ function render() {
   if (bar) {
     bar.dataset.mode = view === 'Today' ? 'jumps' : 'cta';
     bar.innerHTML = view === 'Today'
-      ? `<nav class="wrap rb-jumps" aria-label="Jump to a domain">${domains.map((d, i) => `<a href="#chapter-${i}">${domainIcon(d)}<span>${reportTitles[d]}</span></a>`).join('')}</nav>`
+      ? `<nav class="wrap rb-jumps" aria-label="Jump to a domain">${domains.map((d, i) => `<a class="rb-pill" href="#chapter-${i}" data-chapter="${i}">${domainIcon(d)}<span>${reportTitles[d]}</span></a>`).join('')}</nav>`
       : `<button class="wrap rb-cta-btn" data-view="Today"><span class="rb-mark" aria-hidden="true">${compass}</span><span class="rb-text"><strong>The Leader’s Intelligence Report</strong><small>Four perspectives on today. Four questions for your business. Free, no email.</small></span><span class="rb-cta">Read it →</span></button>`;
   }
 
@@ -369,6 +374,7 @@ function render() {
 
   $('screen').innerHTML = view === 'Explore' ? explore() : view === 'Preferences' ? preferences() : view === 'Today' ? todayReport() : feed();
   document.body.classList.toggle('large-text', prefs.large);
+  watchChapters();
   updateFreshness();
 }
 
@@ -385,24 +391,67 @@ function updateFreshness() {
   void failed;
 }
 
+// The pills mark where the reader actually is, and the bar glows gently now
+// and then so it keeps offering itself without ever shouting.
+let spy = null, glow = null;
+function watchChapters() {
+  if (spy) { spy.disconnect(); spy = null; }
+  clearInterval(glow); glow = null;
+  if (view !== 'Today' || !('IntersectionObserver' in window)) return;
+  const bar = $('reportbar');
+  const pills = [...bar.querySelectorAll('.rb-pill')];
+  const chapters = [...document.querySelectorAll('.chapter')];
+  if (!pills.length || !chapters.length) return;
+  spy = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      const i = chapters.indexOf(e.target);
+      pills.forEach((p, n) => p.setAttribute('aria-current', String(n === i)));
+    }
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  chapters.forEach((c) => spy.observe(c));
+  if (reducedMotion()) return;
+  glow = setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    bar.classList.add('alive');
+    setTimeout(() => bar.classList.remove('alive'), 2200);
+  }, 19000);
+}
+
 function navigate(v) { view = v; domain = 'All'; query = ''; limit = 12; render(); window.scrollTo({ top: 0, behavior: 'instant' }); }
 
 function article(id) {
   const a = [...(data?.articles || []), ...bookmarks].find((x) => x.id === id);
   if (!a) return;
-  $('readerBody').innerHTML = `<span class="domainlabel">${domainIcon(a.domain)}${esc(a.domain)}</span>
-    <h2 id="readerTitle">${esc(a.title)}</h2>
-    <div class="reader-meta">${esc(a.source)} · ${dateLabel(a.publishedAt)} · Publisher excerpt</div>
-    ${a.image ? `<img class="reader-image" src="${esc(safeUrl(a.image))}" alt="">` : ''}
-    <div class="part what"><p class="partlabel">${icon('book')}What happened</p><p>${esc(a.excerpt || 'Read the original report for the full story and context.')}</p></div>
-    ${meansBlock(a)}
-    ${moveBlock(a)}
-    <div class="reader-actions"><a class="goldbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">Read at ${esc(a.source)} ↗</a>${saveButton(a, true)}</div>
-    ${relatedArticles(a)}
-    ${topicTeaser(a)}
-    <p class="sourcefine">The question is an ExploraSelf prompt, not a claim made by the publisher. Full reporting remains at the original source.</p>`;
+  const means = meansBlock(a), move = moveBlock(a, true);
+  // Open calm: the story and nothing else. The read is offered afterwards,
+  // one step at a time, and only if they want it.
+  $('readerBody').innerHTML = `<div class="rd-news">
+      <span class="domainlabel">${domainIcon(a.domain)}${esc(a.domain)}</span>
+      <h2 id="readerTitle">${esc(a.title)}</h2>
+      <div class="reader-meta">${esc(a.source)} · ${dateLabel(a.publishedAt)} · Publisher excerpt</div>
+      ${a.image ? `<img class="reader-image" src="${esc(safeUrl(a.image))}" alt="">` : ''}
+      <p class="rd-body">${esc(a.excerpt || 'Read the original report for the full story and context.')}</p>
+      <div class="reader-actions"><a class="goldbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">Read at ${esc(a.source)} ↗</a>${saveButton(a, true)}</div>
+    </div>
+    ${means ? `<div class="rd-offer" hidden><button class="rd-step" data-reveal="means"><span class="rd-art">${compass}</span><span><strong>What this means for you</strong><small>Take it one step further, if you want to.</small></span><em aria-hidden="true">→</em></button></div>
+    <div class="rd-means" hidden><p class="readhead">${compass}<span>The ExploraSelf read</span></p>${means}
+      ${move ? `<div class="rd-offer2"><button class="rd-step" data-reveal="move"><span class="rd-art">${icon('target')}</span><span><strong>Your next move</strong><small>One tool, and the single question it asks.</small></span><em aria-hidden="true">→</em></button></div>` : ''}</div>
+    <div class="rd-move" hidden>${move}</div>` : ''}
+    <div class="rd-tail"${means ? ' hidden' : ''}>${relatedArticles(a)}${topicTeaser(a)}
+    <p class="sourcefine">The question is an ExploraSelf prompt, not a claim made by the publisher. Full reporting remains at the original source.</p></div>`;
   $('reader').showModal();
+  $('reader').scrollTop = 0;
+  // Let the story have the screen to itself for a beat.
+  clearTimeout(window.readerOffer);
+  const offer = $('readerBody').querySelector('.rd-offer');
+  if (offer) {
+    if (reducedMotion()) offer.hidden = false;
+    else window.readerOffer = setTimeout(() => { offer.hidden = false; offer.classList.add('in'); }, 2600);
+  }
 }
+const reducedMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 function relatedArticles(a) {
   const t = topicFor(a); if (!t) return '';
   const list = articlesFor([t]).slice(0, 2); if (!list.length) return '';
@@ -458,6 +507,16 @@ async function refresh() {
 document.addEventListener('click', (e) => {
   const b = e.target.closest('button,a');
   if (!b) return;
+  if (b.dataset.reveal) {
+    const body = $('readerBody');
+    const step = b.dataset.reveal;
+    b.closest('.rd-offer, .rd-offer2')?.remove();
+    const panel = body.querySelector(step === 'means' ? '.rd-means' : '.rd-move');
+    if (panel) { panel.hidden = false; panel.classList.add('in'); panel.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'nearest' }); }
+    // Everything else waits until they have actually gone deeper.
+    if (step === 'move') { const tail = body.querySelector('.rd-tail'); if (tail) { tail.hidden = false; tail.classList.add('in'); } }
+    return;
+  }
   if (b.dataset.article) { article(b.dataset.article); return; }
   if (b.dataset.view) { navigate(b.dataset.view); return; }
   if (b.dataset.domain) { domain = b.dataset.domain; limit = 12; render(); return; }

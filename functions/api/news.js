@@ -13,6 +13,9 @@
 // out. We never reproduce an article body.
 
 const TTL = 10800; // three hours
+// Bump whenever the feed list changes: the edge keeps each shard for three
+// hours, so without this a feed fix stays invisible until the TTL expires.
+const CACHE_VERSION = 4;
 const MAX_XML = 120000; // bound the work per feed
 const MAX_ITEMS = 10; // per feed
 
@@ -36,6 +39,7 @@ const SHARDS = [
     ['conversation-biz', 'The Conversation', 'Work', 3, 'https://theconversation.com/uk/business/articles.atom'],
     ['npr-business', 'NPR', 'Business', 2, 'https://feeds.npr.org/1006/rss.xml'],
     ['conversation-all', 'The Conversation', 'Self', 3, 'https://theconversation.com/uk/articles.atom'],
+    ['psyche', 'Psyche', 'Self', 3, 'https://psyche.co/feed'],
     ['aljazeera', 'Al Jazeera', 'Business', 2, 'https://www.aljazeera.com/xml/rss/all.xml'],
   ],
   [
@@ -52,6 +56,7 @@ const SHARDS = [
   ],
   [
     ['guardian-smallbiz', 'The Guardian', 'Business', 2, 'https://www.theguardian.com/business/smallbusiness/rss'],
+    ['greatergood', 'Greater Good · UC Berkeley', 'Self', 2, 'https://greatergood.berkeley.edu/feed'],
     ['guardian-biz', 'The Guardian', 'Business', 2, 'https://www.theguardian.com/business/rss'],
     ['ft-home', 'Financial Times', 'Business', 3, 'https://www.ft.com/rss/home'],
     ['cnbc-top', 'CNBC', 'Business', 2, 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114'],
@@ -210,7 +215,7 @@ async function fetchFeed(url) {
   }
 }
 
-export { SHARDS, FILL, TOPICS, TOPIC_DOMAIN, MAX_ITEMS, TTL };
+export { SHARDS, FILL, TOPICS, TOPIC_DOMAIN, MAX_ITEMS, TTL, CACHE_VERSION };
 
 export async function onRequestGet({ request, waitUntil }) {
   const url = new URL(request.url);
@@ -218,7 +223,7 @@ export async function onRequestGet({ request, waitUntil }) {
   const shard = /^[1-4]$/.test(raw || '') ? Number(raw) : 1;
   const sources = shard === 4 ? FILL : SHARDS[shard - 1];
 
-  const key = new Request(new URL(`/api/news?s=${shard}`, url), { method: 'GET' });
+  const key = new Request(new URL(`/api/news?s=${shard}&v=${CACHE_VERSION}`, url), { method: 'GET' });
   const cache = caches.default;
   const cached = await cache.match(key);
   if (cached) return cached;

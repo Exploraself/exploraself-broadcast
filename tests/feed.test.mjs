@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { onRequestGet, SHARDS } from '../functions/api/news.js';
+import { onRequestGet, SHARDS, CACHE_VERSION } from '../functions/api/news.js';
 
 const RSS = `<?xml version="1.0"?><rss><channel><item><title><![CDATA[Leaders & teams rethink customer trust]]></title><link>https://example.org/story?ref=rss</link><description><![CDATA[<p>Useful context for a business decision that runs long enough to survive the minimum-length filter.</p>]]></description><pubDate>Sun, 25 Oct 2026 12:00:00 GMT</pubDate></item></channel></rss>`;
 
@@ -65,7 +65,8 @@ test('each shard is cached under its own key', async () => {
     }
     await Promise.all(pending);
   } finally { globalThis.fetch = originalFetch; globalThis.caches = originalCaches; }
-  assert.deepEqual(keys, ['?s=1', '?s=2', '?s=3'], 'one cache entry per shard');
+  const v = CACHE_VERSION;
+  assert.deepEqual(keys, [`?s=1&v=${v}`, `?s=2&v=${v}`, `?s=3&v=${v}`], 'one cache entry per shard, versioned so a feed fix is not hidden for three hours');
 });
 
 test('an alternate URL is tried when a publisher feed refuses', async () => {

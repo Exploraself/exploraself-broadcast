@@ -371,3 +371,94 @@
 .indgroup{align-self:start}
 /* The older .reportbar .wrap rule is flex; the jump row needs the grid. */
 .reportbar .rb-jumps{display:grid}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CLARITY PASS
+   The news is one block. Our read is a visibly different one. The reader opens
+   calm and offers the read afterwards, a step at a time.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── The card: two zones, unmistakably separate ─────────────────────────── */
+.story.st-card{padding:0;overflow:hidden}
+.st-news{padding:24px 24px 20px;background:#FFFDF7}
+.st-card h3{font-size:27px;line-height:1.18;letter-spacing:-.4px;margin-top:14px}
+.st-card .part.what{border-top:0;padding-top:0;margin-top:14px}
+.st-card .part.what>p:not(.partlabel){font-size:13.5px;line-height:1.75;color:#44505a}
+.st-news .st-foot{border-top:1px solid var(--line);margin-top:18px;padding-top:13px}
+
+.st-read{background:var(--cream);border-top:3px solid var(--brown);padding:20px 24px 24px}
+.readhead{display:flex;align-items:center;gap:9px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--brown);padding-bottom:14px;margin-bottom:4px;border-bottom:1px solid #ded2b6}
+.readhead .compass{width:16px;height:16px;color:var(--gold-ink);flex:none}
+.st-read .part{border-top:0;padding-top:0;margin-top:16px}
+.st-read .part.means{background:none;margin-inline:0;padding:0}
+.st-read .part.move{border-top:1px solid #ded2b6;padding-top:16px}
+
+/* ── The sticky bar: four rounded pills, selective, quietly alive ───────── */
+.reportbar[data-mode=jumps]{background:var(--brown);padding-block:9px}
+.reportbar .rb-jumps{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.rb-pill{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 14px;border:1px solid #6b5641;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.2px;color:#e7dcc7;background:#2a1b11;transition:background .25s,color .25s,border-color .25s,transform .25s}
+.rb-pill .ico{width:17px;height:17px;color:var(--gold);flex:none;transition:color .25s}
+.rb-pill:hover{background:var(--gold);color:var(--brown);border-color:var(--gold);transform:translateY(-1px)}
+.rb-pill:hover .ico{color:var(--brown)}
+.rb-pill[aria-current=true]{background:var(--gold);color:var(--brown);border-color:var(--gold)}
+.rb-pill[aria-current=true] .ico{color:var(--brown)}
+/* A slow sweep every so often: present, never shouting. */
+.reportbar[data-mode=jumps]{position:sticky;overflow:hidden}
+.reportbar[data-mode=jumps]::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;
+ background:linear-gradient(105deg,transparent 36%,rgba(201,162,74,.26) 50%,transparent 64%);transform:translateX(-60%)}
+.reportbar.alive::after{animation:rb-sweep 2.2s ease-in-out both}
+@keyframes rb-sweep{0%{opacity:0;transform:translateX(-60%)}22%{opacity:1}100%{opacity:0;transform:translateX(60%)}}
+
+/* ── The reader: clean screen, then the offer ───────────────────────────── */
+#reader{max-width:720px}
+.rd-news h2{font-size:36px;line-height:1.12;letter-spacing:-.9px;margin:14px 0 14px}
+.rd-body{font-size:16.5px;line-height:1.85;color:#3e4a54;margin:18px 0 4px}
+#readerBody .reader-actions{margin:24px 0 8px}
+
+.rd-offer,.rd-offer2{margin-top:28px}
+.rd-offer[hidden],.rd-offer2[hidden],.rd-means[hidden],.rd-move[hidden]{display:none}
+.rd-offer.in,.rd-means.in,.rd-move.in{animation:rd-in .5s ease-out both}
+@keyframes rd-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rd-step{display:flex;align-items:center;gap:16px;width:100%;text-align:left;padding:17px 20px;background:var(--cream);border:1px solid #ded2b6;border-left:3px solid var(--gold);transition:background .2s,border-color .2s}
+.rd-step:hover{background:#f1e7d1;border-left-color:var(--brown)}
+.rd-step strong{display:block;font-family:var(--serif);font-size:19px;font-weight:500;color:var(--brown);line-height:1.25}
+.rd-step small{display:block;font-size:11.5px;color:#6a6054;margin-top:3px}
+.rd-art{display:grid;place-items:center;width:42px;height:42px;background:var(--brown);color:var(--gold);flex:none}
+.rd-art .compass,.rd-art .ico{width:22px;height:22px}
+.rd-step em{margin-left:auto;font-style:normal;font-size:18px;color:var(--gold-ink)}
+.rd-means{margin-top:28px;background:var(--cream);border-top:3px solid var(--brown);padding:20px 22px 22px}
+.rd-means .part{border-top:0;padding-top:0;margin-top:16px}
+#readerBody .rd-means .part.means{background:none;margin-inline:0;padding:0}
+.rd-move{margin-top:0;background:var(--cream);border-top:1px solid #ded2b6;padding:4px 22px 22px}
+.rd-move .part.move{border-top:0;padding-top:16px;margin-top:0}
+
+/* The ask, kept kind */
+.nl-kind{font-size:11.5px;color:#c9baa1;margin-top:10px}
+.wc-offer{display:flex;gap:11px;align-items:flex-start;background:#fff6e3;border-left:3px solid var(--gold);padding:13px 15px;font-size:12.5px;line-height:1.65;color:#4a3f31;margin-top:4px}
+.wc-offer .ico{width:17px;height:17px;color:var(--gold-ink);flex:none;margin-top:2px}
+.wc-offer b{color:var(--brown)}
+
+@media(max-width:720px){
+ .st-news{padding:20px 20px 17px}.st-read{padding:18px 20px 20px}
+ .st-card h3{font-size:23px}
+ .rb-pill{padding:9px 10px;font-size:10.5px;gap:7px}
+ .rb-pill span{display:none}
+ .rb-pill .ico{width:18px;height:18px}
+ .reportbar .rb-jumps{gap:8px}
+ .rd-news h2{font-size:28px}.rd-body{font-size:15.5px}
+ .rd-step{padding:15px 16px;gap:13px}.rd-step strong{font-size:17px}
+ .rd-means,.rd-move{padding-inline:18px}
+}
+@media(prefers-reduced-motion:reduce){
+ .reportbar.alive::after{animation:none}
+ .rd-offer.in,.rd-means.in,.rd-move.in{animation:none}
+ .rb-pill{transition:none}
+}
+/* Where the move came from, revealed only once the reader has chosen to go
+   deeper. On the card it would be jargon; here it is a discovery. */
+.movefrom{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding-top:13px;border-top:1px solid #ded2b6;font-size:11.5px;line-height:1.65;color:#6a6054}
+.movefrom .ico{width:15px;height:15px;color:var(--gold-ink);flex:none;margin-top:2px}
+.movefrom b{color:var(--brown);letter-spacing:.5px}
+.rd-tail[hidden]{display:none}
+.rd-tail.in{animation:rd-in .5s ease-out both}
+.rd-tail{margin-top:26px}
