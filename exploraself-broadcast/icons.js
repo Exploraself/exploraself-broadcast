@@ -34,10 +34,12 @@ export const icon = (name, cls) => (paths[name] ? svg(paths[name], cls) : '');
 
 export const domainIcon = (d) => icon({ Self: 'self', People: 'people', Work: 'work', Business: 'business' }[d] || 'compass');
 
-// The four ways to lead, always named in full on screen (01 START HERE §13).
+// The four perspectives, named as a journal names its sections (Alexandru,
+// 31 Oct 2026: Broadcast keeps these titles; the programme pages use the
+// Lead yourself / your people / your business / the market set).
 // The keys stay Self/People/Work/Business: they are data, saved preferences
 // and the feed's domain map. Only what the reader sees changes.
-export const domainName = { Self: 'Lead yourself', People: 'Lead your people', Work: 'Lead your business', Business: 'Lead the market' };
+export const domainName = { Self: 'Lead yourself', People: 'Lead people', Work: 'Rethink work', Business: 'Beyond business' };
 export const nameOf = (d) => domainName[d] || d;
 
 // The two roads. The Leader's North Star answers "where am I?"; The Founder's
@@ -46,7 +48,7 @@ export const nameOf = (d) => domainName[d] || d;
 export const roads = [
   { name: 'The Leader’s North Star', icon: 'compass', price: 'Free', tone: 'north', showName: true,
     title: 'Where do you stand as a leader?',
-    line: 'A free reading across the four ways to lead, and where to start.',
+    line: 'A free reading of where you stand as a leader, and where to start.',
     sub: 'Four parts · your reading, your card and an action plan',
     url: 'https://linktolead.exploraself.com/north1/', label: 'Show me my road' },
   { name: 'The Founder’s Blueprint', icon: 'layers', price: 'Free to start', tone: 'gold', showName: true,

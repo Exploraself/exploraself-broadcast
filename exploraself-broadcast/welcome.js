@@ -70,7 +70,7 @@ function topicOf(a) {
 
 function domainsStage() {
   const names = domainName;
-  const lines = { Self: 'Clarity, judgement and the person deciding.', People: 'Teams, trust and the conversations that carry them.', Work: 'Priorities, tools, costs and how the work actually gets done.', Business: 'Markets, customers and what is moving around you.' };
+  const lines = { Self: 'Clarity, judgement and the person deciding.', People: 'Teams, trust and the conversations that carry them.', Work: 'Technology, priorities and how the work actually gets done.', Business: 'Markets, customers and what is moving around you.' };
   const on = ctx.prefs.domains || [];
   return `<div class="wc-stage wc-domains">
     <p class="wc-eyebrow">${icon('compass')}A minute in</p>

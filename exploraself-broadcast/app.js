@@ -39,7 +39,7 @@ const compass = '<svg class="compass" viewBox="0 0 24 24" fill="none" stroke="cu
 const PER_DOMAIN = 2;        // two told in full
 const MORE_PER_DOMAIN = 6;   // and the rest of the domain as a wire list
 const reportTitles = { Self: nameOf('Self'), People: nameOf('People'), Work: nameOf('Work'), Business: nameOf('Business') };
-const descriptions = { Self: 'Clarity, judgement and the person behind your decisions.', People: 'Teams, trust and the relationships that make work possible.', Work: 'Priorities, tools, costs and how the work actually gets done.', Business: 'Customers, competitors, prices and the economy around you.' };
+const descriptions = { Self: 'Clarity, judgement and the person behind your decisions.', People: 'Teams, trust and the relationships that make work possible.', Work: 'Technology, priorities and better ways of getting things done.', Business: 'Markets, customers and the forces shaping your business.' };
 const questions = { Self: 'What assumption deserves a second look before your next important decision?', People: 'How might this affect the people you lead — and what conversation would help?', Work: 'Where could this change a process, a priority or a decision in your business?', Business: 'What would this mean for your customers, your offer or your next investment of time?' };
 
 function persist() {
@@ -128,7 +128,7 @@ const stripBanner = (i) => banner(pickPromo(i), 'strip');
  *  North Star (free, the first road); in Explore, Unshakeable keeps its band. */
 function bandBanner(u = roads[0]) {
   const tag = ['ExploraSelf', u.showName && u.name, u.price, u.worth].filter(Boolean).map(esc).join(' · ');
-  const sub = u.sub || (u === assessments[0] ? '24 questions · four ways to lead · a 30/60/90-day plan' : u.line);
+  const sub = u.sub || (u === assessments[0] ? '24 questions · four domains · a 30/60/90-day plan' : u.line);
   return `<a class="bn bn-band${u.tone ? ' bn-' + u.tone : ''}" href="${esc(u.url)}" target="_blank" rel="noopener">
     <span class="bn-art" aria-hidden="true">${icon(u.icon || 'compass')}</span>
     <span class="bn-body">
@@ -390,7 +390,7 @@ function render() {
     bar.dataset.mode = view === 'Today' ? 'jumps' : 'cta';
     bar.innerHTML = view === 'Today'
       ? `<nav class="wrap rb-jumps" aria-label="Jump to a domain">${domains.map((d, i) => `<a class="rb-pill" href="#chapter-${i}" data-chapter="${i}"><span class="rp-i">${domainIcon(d)}</span><span class="rp-t">${reportTitles[d]}</span></a>`).join('')}</nav>`
-      : `<button class="wrap rb-cta-btn" data-view="Today"><span class="rb-mark" aria-hidden="true">${compass}</span><span class="rb-text"><strong>The Leader’s Intelligence Report</strong><small>Today’s news in four ways to lead. Free, no email.</small></span><span class="rb-cta">Read it →</span></button>`;
+      : `<button class="wrap rb-cta-btn" data-view="Today"><span class="rb-mark" aria-hidden="true">${compass}</span><span class="rb-text"><strong>The Leader’s Intelligence Report</strong><small>Today’s news from four perspectives. Free, no email.</small></span><span class="rb-cta">Read it →</span></button>`;
   }
 
   $('domainbar').hidden = !['Latest', 'Saved'].includes(view);
