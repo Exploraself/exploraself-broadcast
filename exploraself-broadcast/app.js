@@ -11,7 +11,7 @@
 // domain, two stories each, one question each. The four squares are the grid.
 
 import { whyLine, industryNames, industryGroups, topicNames, overrides, articlesFor, teaserFor, coverage, moveFor } from './content.js';
-import { icon, domainIcon, assessments, products } from './icons.js';
+import { icon, domainIcon, nameOf, assessments, products, roads } from './icons.js';
 import { initWelcome, openIndustry } from './welcome.js';
 
 const $ = (id) => document.getElementById(id);
@@ -38,8 +38,8 @@ const compass = '<svg class="compass" viewBox="0 0 24 24" fill="none" stroke="cu
 
 const PER_DOMAIN = 2;        // two told in full
 const MORE_PER_DOMAIN = 6;   // and the rest of the domain as a wire list
-const reportTitles = { Self: 'Lead yourself', People: 'Lead people', Work: 'Rethink work', Business: 'Beyond business' };
-const descriptions = { Self: 'Clarity, judgement and the person behind your decisions.', People: 'Teams, trust and the relationships that make work possible.', Work: 'Technology, priorities and better ways of getting things done.', Business: 'Markets, customers and the forces shaping your business.' };
+const reportTitles = { Self: nameOf('Self'), People: nameOf('People'), Work: nameOf('Work'), Business: nameOf('Business') };
+const descriptions = { Self: 'Clarity, judgement and the person behind your decisions.', People: 'Teams, trust and the relationships that make work possible.', Work: 'Priorities, tools, costs and how the work actually gets done.', Business: 'Customers, competitors, prices and the economy around you.' };
 const questions = { Self: 'What assumption deserves a second look before your next important decision?', People: 'How might this affect the people you lead — and what conversation would help?', Work: 'Where could this change a process, a priority or a decision in your business?', Business: 'What would this mean for your customers, your offer or your next investment of time?' };
 
 function persist() {
@@ -52,7 +52,7 @@ function toast(msg) {
   $('toast').textContent = msg; $('toast').classList.add('show');
   clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2500);
 }
-function dateLabel(s) { const d = new Date(s); return Number.isFinite(d.valueOf()) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Date not supplied'; }
+function dateLabel(s) { const d = new Date(s); return Number.isFinite(d.valueOf()) ? d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'Date not supplied'; }
 function isSaved(id) { return bookmarks.some((a) => a.id === id); }
 
 // ── Selection ────────────────────────────────────────────────────────────────
@@ -108,14 +108,14 @@ function editionList() { const e = edition(); return domains.flatMap((d) => e[d]
 // Three fixed sizes, each filling exactly one grid slot so the rhythm holds.
 // Artwork, a short title, one button. No body copy competing with the news.
 
-const promoPool = [...assessments, ...products];
+const promoPool = [...roads, ...assessments, ...products];
 function pickPromo(i) { return promoPool[((i % promoPool.length) + promoPool.length) % promoPool.length]; }
 
 function banner(p, size = 'tile') {
-  return `<a class="bn bn-${size}" href="${esc(p.url)}" target="_blank" rel="noopener">
+  return `<a class="bn bn-${size}${p.tone ? ' bn-' + p.tone : ''}" href="${esc(p.url)}" target="_blank" rel="noopener">
     <span class="bn-art" aria-hidden="true">${icon(p.icon)}</span>
     <span class="bn-body">
-      <span class="bn-tag">ExploraSelf${p.price ? ' · ' + esc(p.price) : ''}</span>
+      <span class="bn-tag">ExploraSelf${p.showName ? ' · ' + esc(p.name) : ''}${p.price ? ' · ' + esc(p.price) : ''}</span>
       <strong class="bn-title">${esc(p.title)}</strong>
     </span>
     <span class="bn-go">${esc(p.label || 'Open')}<em aria-hidden="true">→</em></span>
@@ -124,15 +124,17 @@ function banner(p, size = 'tile') {
 const tileBanner = (i) => banner(pickPromo(i), 'tile');
 const stripBanner = (i) => banner(pickPromo(i), 'strip');
 
-/** The one full-width band: the paid audit, stated plainly, once per page. */
-function bandBanner() {
-  const u = assessments[0];
-  return `<a class="bn bn-band" href="${esc(u.url)}" target="_blank" rel="noopener">
-    <span class="bn-art" aria-hidden="true">${icon('compass')}</span>
+/** The one full-width band, once per page. On the report it is The Leader's
+ *  North Star (free, the first road); in Explore, Unshakeable keeps its band. */
+function bandBanner(u = roads[0]) {
+  const tag = ['ExploraSelf', u.showName && u.name, u.price, u.worth].filter(Boolean).map(esc).join(' · ');
+  const sub = u.sub || (u === assessments[0] ? '24 questions · four ways to lead · a 30/60/90-day plan' : u.line);
+  return `<a class="bn bn-band${u.tone ? ' bn-' + u.tone : ''}" href="${esc(u.url)}" target="_blank" rel="noopener">
+    <span class="bn-art" aria-hidden="true">${icon(u.icon || 'compass')}</span>
     <span class="bn-body">
-      <span class="bn-tag">ExploraSelf · ${esc(u.price)} · ${esc(u.worth || '')}</span>
+      <span class="bn-tag">${tag}</span>
       <strong class="bn-title">${esc(u.title)}</strong>
-      <span class="bn-sub">24 questions · four domains · a 30/60/90-day plan</span>
+      ${sub ? `<span class="bn-sub">${esc(sub)}</span>` : ''}
     </span>
     <span class="bn-go">${esc(u.label)}<em aria-hidden="true">→</em></span>
   </a>`;
@@ -181,13 +183,13 @@ function moveBlock(a, provenance = false) {
   return `<div class="part move"><p class="partlabel">${icon('target')}Your next move</p>
     <p class="moveline">${esc(m.line)}</p>
     <p class="moveask">${esc(m.ask)}</p>
-    ${provenance ? `<p class="movefrom">${icon('book')}<span>One of a hundred practical tools in Alexandru&rsquo;s field guide. This one is called <b>${esc(m.n)}</b>.</span></p>` : ''}</div>`;
+    ${provenance ? `<p class="movefrom">${icon('book')}<span>One of 99 practical tools in Alexandru&rsquo;s field guide, <i>Built to Lead</i>. This one is called <b>${esc(m.n)}</b>.</span></p>` : ''}</div>`;
 }
 
 function storyCard(a, size = 'card') {
   return `<article class="story st-${size}">
     <div class="st-news">
-      <div class="st-head"><span class="domainlabel">${domainIcon(a.domain)}${esc(a.domain)}</span>${meta(a)}</div>
+      <div class="st-head"><span class="domainlabel">${domainIcon(a.domain)}${esc(nameOf(a.domain))}</span>${meta(a)}</div>
       <h3><button class="headline" data-article="${esc(a.id)}">${esc(a.title)}</button></h3>
       ${a.excerpt ? `<p class="st-excerpt">${esc(a.excerpt)}</p>` : ''}
       <div class="st-foot"><button class="textbtn" data-article="${esc(a.id)}">${Array.isArray(a.body) && a.body.length ? 'Read it here →' : 'Open this story →'}</button><a class="textbtn" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">${esc(a.source)} ↗</a></div>
@@ -232,7 +234,7 @@ function industryPicker(open = false) {
 function reportBar() {
   const live = (data?.sources || []).filter((s) => s.ok).length;
   const count = dedupe((data?.articles || []).filter(sourceAllowed)).length;
-  const when = data ? new Date(data.fetchedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
+  const when = data ? new Date(data.fetchedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
   return `<section class="rptbar">
     <div class="rb-left">
       <p class="eyebrow">${compass}THE LEADER&rsquo;S INTELLIGENCE REPORT · FREE, NO EMAIL</p>
@@ -259,12 +261,12 @@ function chapter(d, i, block) {
   return `<section class="chapter" id="chapter-${i}">
     <header class="ch-head">
       <span class="ch-n">0${i + 1}</span>
-      <div><p class="eyebrow">${d.toUpperCase()} · ${esc(descriptions[d])}</p><h3>${reportTitles[d]}</h3></div>
+      <div><p class="eyebrow">${esc(descriptions[d])}</p><h3>${reportTitles[d]}</h3></div>
       ${domainIcon(d)}
     </header>
     ${lead.length ? `<div class="ch-grid">${lead.map((a) => storyCard(a)).join('')}</div>` : `<p class="ch-none">Nothing in this domain cleared the bar today. The next edition lands within three hours.</p>`}
     ${more.length ? `<div class="morelist">
-      <p class="morehead"><span>More in ${esc(d.toLowerCase())}</span><span>${more.length} ${more.length === 1 ? 'story' : 'stories'}</span></p>
+      <p class="morehead"><span>More headlines</span><span>${more.length} ${more.length === 1 ? 'story' : 'stories'}</span></p>
       ${more.map(newsRow).join('')}
     </div>` : ''}
   </section>`;
@@ -321,20 +323,22 @@ function feed() {
 
 function explore() {
   return `<section class="explore">
+    <div class="sectionhead"><span>THE TWO ROADS</span><span>Where you stand, and how you get there</span></div>
+    <div class="grid">${roads.map((r) => banner(r, 'tile')).join('')}</div>
     <div class="sectionhead"><span>EXPLORASELF · FIVE ASSESSMENTS</span><span>Reading is not the same as knowing where you stand</span></div>
     <div class="grid">${assessments.map((a) => banner(a, 'tile')).join('')}</div>
-    ${bandBanner()}
+    ${bandBanner(assessments[0])}
     <div class="sectionhead"><span>GO FURTHER</span><span>When reading stops being enough</span></div>
     <div class="grid">${products.map((p) => banner(p, 'tile')).join('')}</div>
     <div class="sectionhead"><span>THE FOUR DOMAINS</span><span>Where leadership actually happens</span></div>
-    <div class="grid">${domains.map((d, i) => `<article class="domaincard"><span class="number">0${i + 1}</span>${domainIcon(d)}<h2>${d}</h2><p>${descriptions[d]}</p><button class="textbtn" data-browse="${d}">Read ${d.toLowerCase()} stories →</button></article>`).join('')}</div>
+    <div class="grid">${domains.map((d, i) => `<article class="domaincard"><span class="number">0${i + 1}</span>${domainIcon(d)}<h2>${nameOf(d)}</h2><p>${descriptions[d]}</p><button class="textbtn" data-browse="${d}">Read these stories →</button></article>`).join('')}</div>
     ${newsletter()}</section>`;
 }
 
 function newsletter() {
   return `<section class="newsletter"><p class="eyebrow">${icon('compass')}OPTIONAL · PREFER IT IN YOUR INBOX?</p>
     <h2>One tool a week. Yours to keep.</h2>
-    <p>Join and you get the whole free library the moment you arrive: five leadership assessments, the complete ebook and workbook collection, and one practical tool every week — drawn from Alexandru's field guide of 100.</p>
+    <p>Join and you get the whole free library the moment you arrive: five leadership assessments, the complete ebook and workbook collection, and one practical tool every week — drawn from Alexandru's field guide of 99, Built to Lead.</p>
     <p class="nl-kind">Broadcast stays free to read here with no email, always. This is only for people who would rather it came to them.</p>
     <form class="mcform" data-mc="oneIdea"><div class="formrow">
       <label class="sr-only" for="nlName">First name</label><input id="nlName" name="FNAME" type="text" autocomplete="given-name" placeholder="First name">
@@ -348,7 +352,7 @@ function preferences() {
   const publishers = [...new Set((data?.sources || []).map((s) => s.name))].sort();
   return `<section class="preferences">
     <div class="prefblock"><h2>Your perspective, your choice.</h2><p>Preferences and bookmarks are saved on this device. No account needed.</p>
-      <div class="checkgrid">${domains.map((d) => `<label><input type="checkbox" data-pref-domain="${d}" ${prefs.domains.includes(d) ? 'checked' : ''}><span>${d}<br><small class="muted">${descriptions[d]}</small></span></label>`).join('')}</div></div>
+      <div class="checkgrid">${domains.map((d) => `<label><input type="checkbox" data-pref-domain="${d}" ${prefs.domains.includes(d) ? 'checked' : ''}><span>${nameOf(d)}<br><small class="muted">${descriptions[d]}</small></span></label>`).join('')}</div></div>
     <div class="prefblock"><h2>Your trade</h2>${industryPicker(true)}</div>
     <div class="prefblock"><h2>Your publishers</h2><p>Leave all unticked to read every publisher. ${publishers.length} answered in this edition.</p>
       <div class="checkgrid">${publishers.map((s) => `<label><input type="checkbox" data-pref-source="${esc(s)}" ${prefs.sources.includes(s) ? 'checked' : ''}>${esc(s)}</label>`).join('')}</div>
@@ -386,11 +390,11 @@ function render() {
     bar.dataset.mode = view === 'Today' ? 'jumps' : 'cta';
     bar.innerHTML = view === 'Today'
       ? `<nav class="wrap rb-jumps" aria-label="Jump to a domain">${domains.map((d, i) => `<a class="rb-pill" href="#chapter-${i}" data-chapter="${i}"><span class="rp-i">${domainIcon(d)}</span><span class="rp-t">${reportTitles[d]}</span></a>`).join('')}</nav>`
-      : `<button class="wrap rb-cta-btn" data-view="Today"><span class="rb-mark" aria-hidden="true">${compass}</span><span class="rb-text"><strong>The Leader’s Intelligence Report</strong><small>Four perspectives on today. Four questions for your business. Free, no email.</small></span><span class="rb-cta">Read it →</span></button>`;
+      : `<button class="wrap rb-cta-btn" data-view="Today"><span class="rb-mark" aria-hidden="true">${compass}</span><span class="rb-text"><strong>The Leader’s Intelligence Report</strong><small>Today’s news in four ways to lead. Free, no email.</small></span><span class="rb-cta">Read it →</span></button>`;
   }
 
   $('domainbar').hidden = !['Latest', 'Saved'].includes(view);
-  $('domainbar').innerHTML = ['All', ...domains].map((d, i) => `<button data-domain="${d}" aria-pressed="${domain === d}">${i ? domainIcon(d) : icon('compass')}${d === 'All' ? 'All perspectives' : d}</button>`).join('');
+  $('domainbar').innerHTML = ['All', ...domains].map((d, i) => `<button data-domain="${d}" aria-pressed="${domain === d}">${i ? domainIcon(d) : icon('compass')}${d === 'All' ? 'All perspectives' : nameOf(d)}</button>`).join('');
 
   $('screen').innerHTML = view === 'Explore' ? explore() : view === 'Preferences' ? preferences() : view === 'Today' ? todayReport() : feed();
   document.body.classList.toggle('large-text', prefs.large);
@@ -402,7 +406,7 @@ function updateFreshness() {
   if (busy) { $('freshness').textContent = 'Checking publisher feeds…'; return; }
   if (!data) return;
   const d = new Date(data.fetchedAt);
-  $('freshness').textContent = `${data.stale ? 'Saved edition' : 'Retrieved'} ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · ${dateLabel(d)} · 3h refresh`;
+  $('freshness').textContent = `${data.stale ? 'Saved edition' : 'Retrieved'} ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · ${dateLabel(d)} · 3h refresh`;
   const failed = (data.sources || []).filter((s) => !s.ok);
   $('notice').hidden = !data.stale;
   $('notice').textContent = data.stale ? 'You’re reading a cached edition. Live refresh is currently unavailable.' : '';
@@ -447,7 +451,7 @@ function article(id) {
   // Open calm: the story and nothing else. The read is offered afterwards,
   // one step at a time, and only if they want it.
   $('readerBody').innerHTML = `<div class="rd-news">
-      <span class="domainlabel">${domainIcon(a.domain)}${esc(a.domain)}</span>
+      <span class="domainlabel">${domainIcon(a.domain)}${esc(nameOf(a.domain))}</span>
       <h2 id="readerTitle">${esc(a.title)}</h2>
       <div class="reader-meta">${esc(a.source)} · ${dateLabel(a.publishedAt)} · Publisher excerpt</div>
       ${a.image ? `<img class="reader-image" src="${esc(safeUrl(a.image))}" alt="">` : ''}
@@ -782,7 +786,7 @@ document.addEventListener('click', (e) => {
 }, true);
 setInterval(refresh, 10800000);
 
-$('editionDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+$('editionDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 if (installed()) document.querySelector('.install')?.remove();
 render(); refresh();
 initWelcome({ getData: () => data, getEdition: () => editionList(), prefs, persist, render, openedCount: () => bookmarks.length });

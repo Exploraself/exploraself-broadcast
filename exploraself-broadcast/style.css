@@ -260,6 +260,17 @@
 .bn-band .bn-title{font-size:31px;letter-spacing:-.6px}
 .bn-band .bn-sub{color:#50401f}
 .bn-band .bn-go{background:var(--brown);color:var(--cream);padding:14px 20px;font-size:12px}
+/* The two roads keep their own colours: The Leader's North Star steel blue, The Founder's Blueprint antique gold. */
+.bn-north .bn-art{background:#6F93B8;color:#fff}
+.bn-tile.bn-north,.bn-strip.bn-north{background:#EEF3F8;border-color:#6F93B8}
+.bn-north .bn-go{background:#0E1C2B;color:#F6EEDD}
+.bn-north:hover .bn-go{background:#6F93B8;color:#fff}
+.bn-band.bn-north{background:#A9C0D9}
+.bn-band.bn-north .bn-art{background:#0E1C2B;color:#A9C0D9}
+.bn-band.bn-north .bn-tag{color:#1d3550}
+.bn-band.bn-north .bn-sub{color:#24384d}
+.bn-gold .bn-art{background:#B4975F;color:#2B1B12}
+.bn-tile.bn-gold,.bn-strip.bn-gold{border-color:#B4975F}
 .bn-band:hover .bn-go{background:var(--paper);color:var(--brown)}
 
 /* ── Chapters: two stories, one question, one banner ───────────────────── */
@@ -613,6 +624,7 @@ body.explore-world .pageintro h1{color:var(--brown)}
 body.explore-world .pageintro .eyebrow{color:var(--gold-ink)}
 body.explore-world .sectionhead{border-top-color:var(--brown)}
 body.explore-world .bn-tile{background:#FDF8EC;border-top-color:var(--gold)}
+body.explore-world .bn-tile.bn-north{background:#EEF3F8;border-top-color:#6F93B8}body.explore-world .bn-tile.bn-gold{border-top-color:#B4975F}
 body.explore-world .domaincard{background:#FDF8EC;border-top-color:var(--brown)}
 body.explore-world .footer{border-top-color:#ddd0b4}
 body.explore-world .reportbar[data-mode=cta]{background:var(--warm-brown)}

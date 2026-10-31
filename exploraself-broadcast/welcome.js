@@ -13,7 +13,7 @@
 // is not an offer.
 
 import { industryGroups, whyLine, topicNames, overrides } from './content.js';
-import { icon } from './icons.js';
+import { icon, domainName, nameOf } from './icons.js';
 
 const KEY = 'broadcast-welcome-v1';
 const ASK_DOMAINS = 60;      // after a minute, offer the four perspectives
@@ -69,8 +69,8 @@ function topicOf(a) {
 }
 
 function domainsStage() {
-  const names = { Self: 'Lead yourself', People: 'Lead people', Work: 'Rethink work', Business: 'Beyond business' };
-  const lines = { Self: 'Clarity, judgement and the person deciding.', People: 'Teams, trust and the conversations that carry them.', Work: 'Technology, priorities and how the work actually gets done.', Business: 'Markets, customers and what is moving around you.' };
+  const names = domainName;
+  const lines = { Self: 'Clarity, judgement and the person deciding.', People: 'Teams, trust and the conversations that carry them.', Work: 'Priorities, tools, costs and how the work actually gets done.', Business: 'Markets, customers and what is moving around you.' };
   const on = ctx.prefs.domains || [];
   return `<div class="wc-stage wc-domains">
     <p class="wc-eyebrow">${icon('compass')}A minute in</p>
@@ -85,7 +85,7 @@ function domainsStage() {
 function industryStage() {
   return `<div class="wc-stage wc-industry">
     <p class="wc-eyebrow">${icon('compass')}Before you read on</p>
-    <h2>Everyone read the same headlines today.<br>Almost nobody worked out <em>what they meant</em>.</h2>
+    <h2>The headline tells you what happened.<br>It rarely tells you <em>what it means for you</em>.</h2>
     <p class="wc-lede">Name the work you are in. Every story then tells you where that kind of news usually lands in your trade — the part the headline leaves out. Six groups, one choice.</p>
     <div class="indgroups">${industryGroups.map((g, i) => `<details class="indgroup"${i === 0 ? ' open' : ''}><summary>${esc(g.label)}<span>${g.items.length}</span></summary><div class="indchips">${g.items.map((n) => `<button class="indchip" data-wc-industry="${esc(n)}">${esc(n)}</button>`).join('')}</div></details>`).join('')}</div>
     <button class="wc-skip" data-wc-dismiss>Skip for now — I&rsquo;ll read as I am</button>
@@ -101,7 +101,7 @@ function animationStage() {
     ${stories.map((a, i) => {
       const t = topicOf(a);
       return `<div class="wc-item" style="--d:${i * 1.9}s">
-        <span class="wc-domain">${esc(a.domain)}</span>
+        <span class="wc-domain">${esc(nameOf(a.domain))}</span>
         <h3>${esc(a.title)}</h3>
         <p class="wc-why">${esc(t ? whyLine(t, ind) : '')}</p>
       </div>`;
@@ -118,7 +118,7 @@ function joinStage() {
     <p class="wc-eyebrow">${icon('clock')}This edition is not kept</p>
     <h2>${left ? `This edition is replaced in <em>${esc(left)}</em>.` : `Tomorrow&rsquo;s eight land in the morning.`}</h2>
     <p class="wc-lede">Broadcast keeps no back issues.${rest ? ` ${rest} ${rest === 1 ? 'story' : 'stories'} in today's edition you have not opened yet.` : ''} Tomorrow, eight more, ${lens} — five minutes, and you walk in knowing what moved.</p>
-    <p class="wc-offer">${icon('book')}<span>Join and the whole free library opens now: <b>five assessments</b>, <b>every ebook and workbook</b>, and <b>one tool a week</b> from the field guide of 100.</span></p>
+    <p class="wc-offer">${icon('book')}<span>Join and the whole free library opens now: <b>five assessments</b>, <b>every ebook and workbook</b>, and <b>one tool a week</b> from the field guide of 99, <i>Built to Lead</i>.</span></p>
     <form class="wc-form mcform" data-mc="broadcast">
       <label class="wc-sr" for="wcName">First name</label>
       <input id="wcName" name="FNAME" type="text" autocomplete="given-name" placeholder="First name" required>
