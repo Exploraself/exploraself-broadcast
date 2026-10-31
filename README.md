@@ -1,6 +1,6 @@
 # ExploraSelf Broadcast
 
-An independent mobile-first news PWA for leaders. Original source headlines and short excerpts flow into four domains: Self, People, Work, Business. Free reading, device-local bookmarks/preferences, a three-hour feed cache, and clearly labelled ExploraSelf tools.
+An independent mobile-first news PWA for leaders. Original source headlines and short excerpts flow into four domains, shown as journal sections: Lead yourself, Lead people, Rethink work and Beyond business (internal keys stay Self, People, Work, Business). Free reading, device-local bookmarks/preferences, a three-hour feed cache, and clearly labelled ExploraSelf tools.
 
 ## Run
 

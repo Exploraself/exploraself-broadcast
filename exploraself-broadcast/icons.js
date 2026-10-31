@@ -34,9 +34,32 @@ export const icon = (name, cls) => (paths[name] ? svg(paths[name], cls) : '');
 
 export const domainIcon = (d) => icon({ Self: 'self', People: 'people', Work: 'work', Business: 'business' }[d] || 'compass');
 
+// The four perspectives, named as a journal names its sections (Alexandru,
+// 31 Oct 2026: Broadcast keeps these titles; the programme pages use the
+// Lead yourself / your people / your business / the market set).
+// The keys stay Self/People/Work/Business: they are data, saved preferences
+// and the feed's domain map. Only what the reader sees changes.
+export const domainName = { Self: 'Lead yourself', People: 'Lead people', Work: 'Rethink work', Business: 'Beyond business' };
+export const nameOf = (d) => domainName[d] || d;
+
+// The two roads. The Leader's North Star answers "where am I?"; The Founder's
+// Blueprint answers "how do I get there?". Same pages as exploraself.com's
+// two-roads band, so every door says the same thing.
+export const roads = [
+  { name: 'The Leader’s North Star', icon: 'compass', price: 'Free', tone: 'north', showName: true,
+    title: 'Where do you stand as a leader?',
+    line: 'A free reading of where you stand as a leader, and where to start.',
+    sub: 'Four parts · your reading, your card and an action plan',
+    url: 'https://linktolead.exploraself.com/north1/', label: 'Show me my road' },
+  { name: 'The Founder’s Blueprint', icon: 'layers', price: 'Free to start', tone: 'gold', showName: true,
+    title: 'Your business can’t grow past you.',
+    line: 'Twelve weeks that take the business out of your head and onto paper.',
+    url: 'https://linktolead.exploraself.com/road1/', label: 'Start free tonight' },
+];
+
 // The five assessments, with the icon and the hook that sells each one.
 export const assessments = [
-  { name: 'Unshakeable', domain: 'Self', icon: 'compass', price: '$9.99', worth: 'Valued at $199',
+  { name: 'Unshakeable', domain: 'Self', icon: 'compass', price: '$9.99', worth: '',
     title: 'The audit your ego would skip.',
     line: 'Your whole leadership, across four domains.',
     hook: 'Ambition is very good at hiding what it costs you.',
